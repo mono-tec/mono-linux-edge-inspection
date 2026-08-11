@@ -259,6 +259,19 @@ jobs:
         run: |
           find artifacts/sbom -type f -print
 
+      # Releaseへ添付するときに区別できるよう、
+      # RuntimeとCapture Request ListenerのSBOMへ個別のファイル名を付けます。
+      - name: Prepare SBOM release files
+        shell: bash
+        run: |
+          cp \
+            artifacts/sbom/runtime/_manifest/spdx_2.2/manifest.spdx.json \
+            "artifacts/sbom/linux-edge-inspection-runtime_${VERSION}.spdx.json"
+
+          cp \
+            artifacts/sbom/capture-request-listener/_manifest/spdx_2.2/manifest.spdx.json \
+            "artifacts/sbom/linux-edge-inspection-capture-request-listener_${VERSION}.spdx.json"
+
       # ============================================================
       # 成果物の登録
       # ============================================================
@@ -272,8 +285,8 @@ jobs:
           path: |
             artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_amd64.deb
-            artifacts/sbom/runtime/
-            artifacts/sbom/capture-request-listener/
+            artifacts/sbom/linux-edge-inspection-runtime_${{ env.VERSION }}.spdx.json
+            artifacts/sbom/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}.spdx.json
           if-no-files-found: error
           retention-days: 14
 
@@ -285,6 +298,6 @@ jobs:
           files: |
             artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_amd64.deb
-            artifacts/sbom/runtime/_manifest/spdx_2.2/manifest.spdx.json
-            artifacts/sbom/capture-request-listener/_manifest/spdx_2.2/manifest.spdx.json
+            artifacts/sbom/linux-edge-inspection-runtime_${{ env.VERSION }}.spdx.json
+            artifacts/sbom/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}.spdx.json
           generate_release_notes: true

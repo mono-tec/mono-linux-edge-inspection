@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/dotnet-build.yml" />
+  </Folder>
   <Folder Name="/licenses/" />
   <Folder Name="/licenses/dotnet/">
     <File Path="licenses/dotnet/LICENSE.TXT" />
