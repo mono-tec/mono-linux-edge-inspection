@@ -1,0 +1,35 @@
+[Unit]
+Description=Linux Edge Inspection Camera Runtime
+After=multi-user.target
+
+[Service]
+Type=oneshot
+
+# カメラデバイスへアクセスするため、
+# ubuntuユーザーをvideoグループへ追加します。
+User=ubuntu
+Group=ubuntu
+SupplementaryGroups=video
+
+# /var/lib/linux-edge-inspection-runtime を
+# systemdによって作成・管理します。
+StateDirectory=linux-edge-inspection-runtime
+
+# appsettings.jsonを読み込むため、
+# アプリケーション配置先を作業ディレクトリにします。
+WorkingDirectory=/opt/linux-edge-inspection-runtime
+
+# 本番環境用の設定を使用します。
+Environment=DOTNET_ENVIRONMENT=Production
+
+# 撮影画像は書き込み可能な/var/lib配下へ保存します。
+Environment=Camera__OutputDirectory=/var/lib/linux-edge-inspection-runtime/captures
+
+# 1回の撮影Runtimeを実行します。
+ExecStart=/usr/bin/linux-edge-inspection-runtime
+
+# oneshot実行完了後もactive状態を保持します。
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

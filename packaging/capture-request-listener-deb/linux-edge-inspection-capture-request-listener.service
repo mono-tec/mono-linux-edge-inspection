@@ -1,0 +1,23 @@
+[Unit]
+Description=Linux Edge Inspection Capture Request Listener
+After=network.target
+
+[Service]
+Type=simple
+
+# appsettings.jsonを読み込むため、
+# アプリケーション配置先を作業ディレクトリにします。
+WorkingDirectory=/opt/linux-edge-inspection-capture-request-listener
+
+# 本番環境用の設定を使用します。
+Environment=DOTNET_ENVIRONMENT=Production
+
+# Capture Request Listenerを起動します。
+ExecStart=/usr/bin/linux-edge-inspection-capture-request-listener
+
+# 異常終了した場合はサービスを再起動します。
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

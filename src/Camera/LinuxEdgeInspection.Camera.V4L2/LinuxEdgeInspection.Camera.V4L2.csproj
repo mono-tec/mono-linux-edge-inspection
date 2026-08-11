@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- アプリケーション情報 -->
+    <AssemblyName>LinuxEdgeInspection.Camera.V4L2</AssemblyName>
+    <Product>Linux Edge Inspection</Product>
+    <Description>
+      V4L2 camera implementation for Linux edge inspection.
+    </Description>
+    <Authors>mono-tec</Authors>
+    <Company>mono-tec</Company>
+    <Copyright>Copyright © mono-tec 2026</Copyright>
+
+    <!-- ライセンス情報 -->
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+
+    <!-- ソースコードの出所 -->
+    <RepositoryUrl>
+      https://github.com/mono-tec/mono-linux-edge-inspection
+    </RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LinuxEdgeInspection.Camera.Abstractions\LinuxEdgeInspection.Camera.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+</Project>

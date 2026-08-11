@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/packaging/" />
+  <Folder Name="/src/">
+    <Project Path="src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj" Id="0cf01b56-230c-4f3d-9b09-f26ea0573ef0" />
+    <Project Path="src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj" Id="868d227f-205b-40b4-b565-bca90d221cfc" />
+  </Folder>
+  <Folder Name="/src/Camera/">
+    <Project Path="src/Camera/LinuxEdgeInspection.Camera.Abstractions/LinuxEdgeInspection.Camera.Abstractions.csproj" Id="692d0fed-294d-4d84-814c-5b2e3d949efb" />
+    <Project Path="src/Camera/LinuxEdgeInspection.Camera.V4L2/LinuxEdgeInspection.Camera.V4L2.csproj" Id="de8c571a-e3f7-4645-9989-f3473d306a17" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LinuxEdgeInspection.CaptureRequestListener.Tests/LinuxEdgeInspection.CaptureRequestListener.Tests.csproj" Id="9756f9ed-d2ab-4180-8fca-f4927845afb7" />
+    <Project Path="tests/LinuxEdgeInspection.Runtime.Tests/LinuxEdgeInspection.Runtime.Tests.csproj" Id="22b7f869-f60b-4a8b-813e-07a373638f14" />
+  </Folder>
+  <Folder Name="/tests/Camera/">
+    <Project Path="tests/Camera/LinuxEdgeInspection.Camera.V4L2.Tests/LinuxEdgeInspection.Camera.V4L2.Tests.csproj" Id="a98cf1c2-b828-40ac-96d6-8b748a34b420" />
+  </Folder>
+  <Folder Name="/ソリューション項目/">
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="THIRD-PARTY-NOTICES.md" />
+  </Folder>
+</Solution>

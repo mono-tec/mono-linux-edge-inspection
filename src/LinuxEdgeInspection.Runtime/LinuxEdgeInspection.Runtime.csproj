@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+
+    <!-- アプリケーション情報 -->
+    <AssemblyName>LinuxEdgeInspection.Runtime</AssemblyName>
+    <Product>Linux Edge Inspection</Product>
+    <Description>
+      Runtime application for Linux edge inspection.
+    </Description>
+    <Authors>mono-tec</Authors>
+    <Company>mono-tec</Company>
+    <Copyright>Copyright © mono-tec 2026</Copyright>
+
+    <!-- ライセンス情報 -->
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+
+    <!-- ソースコードの出所 -->
+    <RepositoryUrl>
+      https://github.com/mono-tec/mono-linux-edge-inspection
+    </RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Camera\LinuxEdgeInspection.Camera.Abstractions\LinuxEdgeInspection.Camera.Abstractions.csproj" />
+    <ProjectReference Include="..\Camera\LinuxEdgeInspection.Camera.V4L2\LinuxEdgeInspection.Camera.V4L2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
