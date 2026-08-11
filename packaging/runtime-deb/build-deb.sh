@@ -121,13 +121,13 @@ cp \
 
 # .NET公式のMIT Licenseを配置します。
 cp \
-  "${REPOSITORY_ROOT}/licenses/dotnet/LICENSE.txt" \
-  "${DOCUMENT_DIR}/licenses/dotnet/LICENSE.txt"
+  "${REPOSITORY_ROOT}/licenses/dotnet/LICENSE.TXT" \
+  "${DOCUMENT_DIR}/licenses/dotnet/LICENSE.TXT"
 
 # .NET公式のThird Party Noticesを配置します。
 cp \
-  "${REPOSITORY_ROOT}/licenses/dotnet/THIRD-PARTY-NOTICES.txt" \
-  "${DOCUMENT_DIR}/licenses/dotnet/THIRD-PARTY-NOTICES.txt"
+  "${REPOSITORY_ROOT}/licenses/dotnet/THIRD-PARTY-NOTICES.TXT" \
+  "${DOCUMENT_DIR}/licenses/dotnet/THIRD-PARTY-NOTICES.TXT"
 
 # ------------------------------------------------------------
 # 実行用ラッパースクリプトの作成

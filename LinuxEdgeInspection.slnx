@@ -1,5 +1,18 @@
 <Solution>
+  <Folder Name="/licenses/" />
+  <Folder Name="/licenses/dotnet/">
+    <File Path="licenses/dotnet/LICENSE.TXT" />
+    <File Path="licenses/dotnet/THIRD-PARTY-NOTICES.TXT" />
+  </Folder>
   <Folder Name="/packaging/" />
+  <Folder Name="/packaging/capture-request-listener-deb/">
+    <File Path="packaging/capture-request-listener-deb/build-deb.sh" />
+    <File Path="packaging/capture-request-listener-deb/linux-edge-inspection-capture-request-listener.service" />
+  </Folder>
+  <Folder Name="/packaging/runtime-deb/">
+    <File Path="packaging/runtime-deb/build-deb.sh" />
+    <File Path="packaging/runtime-deb/linux-edge-inspection-runtime.service" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj" Id="0cf01b56-230c-4f3d-9b09-f26ea0573ef0" />
     <Project Path="src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj" Id="868d227f-205b-40b4-b565-bca90d221cfc" />
