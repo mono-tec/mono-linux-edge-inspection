@@ -30,5 +30,6 @@
   <Folder Name="/ソリューション項目/">
     <File Path=".gitignore" />
     <File Path="LICENSE" />
+    <File Path="README.md" />
   </Folder>
 </Solution>

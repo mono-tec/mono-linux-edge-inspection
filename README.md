@@ -233,6 +233,54 @@ pwsh -ExecutionPolicy Bypass `
 
 生成物は `artifacts/` 配下へ出力されます。
 
+### SBOM and OSS License Information
+
+GitHub Actionsでは、debパッケージ作成時に
+SBOMとOSSライセンス情報も生成します。
+
+生成した情報は、最終的に各debパッケージへ含めます。
+
+#### Microsoft sbom-tool
+
+SPDX形式のSBOM生成に使用します。
+
+* Repository: https://github.com/microsoft/sbom-tool
+* License: MIT
+
+#### ONOT
+
+生成したSBOMをもとに、
+OSSライセンス情報をまとめた `THIRD-PARTY-NOTICES.md` の生成に使用します。
+
+* Repository: https://github.com/sktelecom/onot
+* Version: 1.1.2
+* License: Apache License 2.0
+
+生成処理の流れは以下です。
+
+```text
+dotnet publish
+      ↓
+Microsoft sbom-tool
+      ↓
+SPDX SBOM
+      ↓
+ONOT
+      ↓
+THIRD-PARTY-NOTICES.md
+      ↓
+Debian Package
+```
+
+各debパッケージには、以下のファイルを
+`/usr/share/doc/<package-name>/` 配下へ格納します。
+
+```text
+LICENSE
+THIRD-PARTY-NOTICES.md
+sbom.spdx.json
+```
+
 ---
 
 ## ■ License
