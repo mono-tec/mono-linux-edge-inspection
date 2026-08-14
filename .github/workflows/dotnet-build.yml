@@ -65,6 +65,16 @@ jobs:
         run: |
           dotnet tool install --global Microsoft.Sbom.DotNetTool
 
+      # SBOMからOSSライセンスNoticeを生成するためにONOTをインストールします。
+      - name: Install ONOT
+        shell: bash
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/onot-venv"
+          source "${RUNNER_TEMP}/onot-venv/bin/activate"
+
+          pip install --upgrade pip
+          pip install "onot[spdx,cyclonedx,excel,api]==1.1.2"
+
       # ============================================================
       # ソリューション全体のテスト
       # ============================================================
@@ -148,6 +158,53 @@ jobs:
             -pv "${VERSION}" \
             -ps "mono-tec"
 
+      # RuntimeのSBOMからOSSライセンスNoticeを生成します。
+      - name: Generate camera runtime OSS notice
+        shell: bash
+        run: |
+          source "${RUNNER_TEMP}/onot-venv/bin/activate"
+
+          rm -rf artifacts/license/linux-edge-inspection-runtime
+          mkdir -p artifacts/license/linux-edge-inspection-runtime
+
+          onot generate \
+            -i artifacts/sbom/runtime/_manifest/spdx_2.2/manifest.spdx.json \
+            -f markdown \
+            --output-dir artifacts/license/linux-edge-inspection-runtime
+
+      # Runtimeのライセンス関連ファイルを
+      # Debianパッケージへ格納しやすい形へ整理します。
+      - name: Prepare camera runtime compliance files
+        shell: bash
+        run: |
+          COMPLIANCE_DIR="artifacts/compliance/linux-edge-inspection-runtime"
+
+          rm -rf "${COMPLIANCE_DIR}"
+          mkdir -p "${COMPLIANCE_DIR}"
+
+          cp LICENSE "${COMPLIANCE_DIR}/LICENSE"
+
+          NOTICE_FILE="$(find \
+            artifacts/license/linux-edge-inspection-runtime \
+            -maxdepth 1 \
+            -type f \
+            -name "*.md" \
+            | head -n 1)"
+
+          if [[ -z "${NOTICE_FILE}" ]]; then
+            echo "Runtime OSS Notice file was not generated."
+            exit 1
+          fi
+
+          cp "${NOTICE_FILE}" "${COMPLIANCE_DIR}/THIRD-PARTY-NOTICES.md"
+
+          cp \
+            artifacts/sbom/runtime/_manifest/spdx_2.2/manifest.spdx.json \
+            "${COMPLIANCE_DIR}/sbom.spdx.json"
+
+          echo "Runtime compliance files:"
+          find "${COMPLIANCE_DIR}" -maxdepth 1 -type f -print
+
       # publish成果物からRuntime用debパッケージを作成します。
       - name: Create camera runtime Debian package
         shell: bash
@@ -158,6 +215,7 @@ jobs:
           PACKAGE_ARCHITECTURE="amd64" \
           RUNTIME_IDENTIFIER="linux-x64" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-runtime" \
+          COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-runtime" \
           ./packaging/runtime-deb/build-deb.sh
 
       # ============================================================
@@ -215,6 +273,53 @@ jobs:
             -pv "${VERSION}" \
             -ps "mono-tec"
 
+      # Capture Request ListenerのSBOMからOSSライセンスNoticeを生成します。
+      - name: Generate Capture Request Listener OSS notice
+        shell: bash
+        run: |
+          source "${RUNNER_TEMP}/onot-venv/bin/activate"
+
+          rm -rf artifacts/license/linux-edge-inspection-capture-request-listener
+          mkdir -p artifacts/license/linux-edge-inspection-capture-request-listener
+
+          onot generate \
+            -i artifacts/sbom/capture-request-listener/_manifest/spdx_2.2/manifest.spdx.json \
+            -f markdown \
+            --output-dir artifacts/license/linux-edge-inspection-capture-request-listener
+
+      # Capture Request Listenerのライセンス関連ファイルを
+      # Debianパッケージへ格納しやすい形へ整理します。
+      - name: Prepare Capture Request Listener compliance files
+        shell: bash
+        run: |
+          COMPLIANCE_DIR="artifacts/compliance/linux-edge-inspection-capture-request-listener"
+
+          rm -rf "${COMPLIANCE_DIR}"
+          mkdir -p "${COMPLIANCE_DIR}"
+
+          cp LICENSE "${COMPLIANCE_DIR}/LICENSE"
+
+          NOTICE_FILE="$(find \
+            artifacts/license/linux-edge-inspection-capture-request-listener \
+            -maxdepth 1 \
+            -type f \
+            -name "*.md" \
+            | head -n 1)"
+
+          if [[ -z "${NOTICE_FILE}" ]]; then
+            echo "Capture Request Listener OSS Notice file was not generated."
+            exit 1
+          fi
+
+          cp "${NOTICE_FILE}" "${COMPLIANCE_DIR}/THIRD-PARTY-NOTICES.md"
+
+          cp \
+            artifacts/sbom/capture-request-listener/_manifest/spdx_2.2/manifest.spdx.json \
+            "${COMPLIANCE_DIR}/sbom.spdx.json"
+
+          echo "Capture Request Listener compliance files:"
+          find "${COMPLIANCE_DIR}" -maxdepth 1 -type f -print
+
       # publish成果物からCapture Request Listener用debパッケージを作成します。
       - name: Create Capture Request Listener Debian package
         shell: bash
@@ -225,6 +330,7 @@ jobs:
           PACKAGE_ARCHITECTURE="amd64" \
           RUNTIME_IDENTIFIER="linux-x64" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-capture-request-listener" \
+          COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-capture-request-listener" \
           ./packaging/capture-request-listener-deb/build-deb.sh
 
       # ============================================================
@@ -258,6 +364,12 @@ jobs:
         shell: bash
         run: |
           find artifacts/sbom -type f -print
+
+      # Compliance生成結果を確認します。
+      - name: Inspect generated compliance files
+        shell: bash
+        run: |
+          find artifacts/compliance -type f -print
 
       # Releaseへ添付するときに区別できるよう、
       # RuntimeとCapture Request ListenerのSBOMへ個別のファイル名を付けます。

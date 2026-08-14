@@ -3,11 +3,6 @@
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/dotnet-build.yml" />
   </Folder>
-  <Folder Name="/licenses/" />
-  <Folder Name="/licenses/dotnet/">
-    <File Path="licenses/dotnet/LICENSE.TXT" />
-    <File Path="licenses/dotnet/THIRD-PARTY-NOTICES.TXT" />
-  </Folder>
   <Folder Name="/packaging/" />
   <Folder Name="/packaging/capture-request-listener-deb/">
     <File Path="packaging/capture-request-listener-deb/build-deb.sh" />
@@ -35,6 +30,5 @@
   <Folder Name="/ソリューション項目/">
     <File Path=".gitignore" />
     <File Path="LICENSE" />
-    <File Path="THIRD-PARTY-NOTICES.md" />
   </Folder>
 </Solution>

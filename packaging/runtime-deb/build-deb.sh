@@ -51,6 +51,10 @@ OUTPUT_DIR="${REPOSITORY_ROOT}/artifacts/packages"
 # GitHub Actions側からPUBLISH_DIRを指定することもできます。
 PUBLISH_DIR="${PUBLISH_DIR:-${REPOSITORY_ROOT}/artifacts/publish/${PACKAGE_NAME}}"
 
+# GitHub Actionsなどで生成した
+# LICENSE / THIRD-PARTY-NOTICES.md / sbom.spdx.json の配置先です。
+COMPLIANCE_DIR="${COMPLIANCE_DIR:-${REPOSITORY_ROOT}/artifacts/compliance/${PACKAGE_NAME}}"
+
 # Debianパッケージ内のドキュメント配置先です。
 DOCUMENT_DIR="${WORK_DIR}/usr/share/doc/${PACKAGE_NAME}"
 
@@ -67,7 +71,7 @@ mkdir -p \
   "${WORK_DIR}/opt/${PACKAGE_NAME}" \
   "${WORK_DIR}/usr/bin" \
   "${WORK_DIR}/lib/systemd/system" \
-  "${DOCUMENT_DIR}/licenses/dotnet" \
+  "${DOCUMENT_DIR}" \
   "${OUTPUT_DIR}"
 
 # ------------------------------------------------------------
@@ -106,28 +110,35 @@ cp \
   "${WORK_DIR}/lib/systemd/system/${SERVICE_FILE}"
 
 # ------------------------------------------------------------
-# ライセンス文書の配置
+# ライセンス・Notice・SBOMの配置
 # ------------------------------------------------------------
+
+# GitHub Actionsなどで生成したCompliance一式が存在することを確認します。
+for compliance_file in \
+  LICENSE \
+  THIRD-PARTY-NOTICES.md \
+  sbom.spdx.json
+do
+  if [[ ! -f "${COMPLIANCE_DIR}/${compliance_file}" ]]; then
+    echo "Required compliance file not found: ${COMPLIANCE_DIR}/${compliance_file}"
+    exit 1
+  fi
+done
 
 # Linux Edge Inspection本体のApache License 2.0を配置します。
 cp \
-  "${REPOSITORY_ROOT}/LICENSE" \
+  "${COMPLIANCE_DIR}/LICENSE" \
   "${DOCUMENT_DIR}/LICENSE"
 
-# Linux Edge Inspection側のThird Party案内文書を配置します。
+# SBOMから自動生成したThird Party Noticeを配置します。
 cp \
-  "${REPOSITORY_ROOT}/THIRD-PARTY-NOTICES.md" \
+  "${COMPLIANCE_DIR}/THIRD-PARTY-NOTICES.md" \
   "${DOCUMENT_DIR}/THIRD-PARTY-NOTICES.md"
 
-# .NET公式のMIT Licenseを配置します。
+# SPDX形式のSBOMを配置します。
 cp \
-  "${REPOSITORY_ROOT}/licenses/dotnet/LICENSE.TXT" \
-  "${DOCUMENT_DIR}/licenses/dotnet/LICENSE.TXT"
-
-# .NET公式のThird Party Noticesを配置します。
-cp \
-  "${REPOSITORY_ROOT}/licenses/dotnet/THIRD-PARTY-NOTICES.TXT" \
-  "${DOCUMENT_DIR}/licenses/dotnet/THIRD-PARTY-NOTICES.TXT"
+  "${COMPLIANCE_DIR}/sbom.spdx.json" \
+  "${DOCUMENT_DIR}/sbom.spdx.json"
 
 # ------------------------------------------------------------
 # 実行用ラッパースクリプトの作成
