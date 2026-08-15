@@ -33,10 +33,11 @@ public sealed class InspectionWorkerService
 
         _logger.Log(
             result.Succeeded ? LogLevel.Information : LogLevel.Warning,
-            "Capture Resultを受信しました。RequestId: {RequestId}, CaptureIndex: {CaptureIndex}, Succeeded: {Succeeded}, ErrorCode: {ErrorCode}",
+            "Capture Resultを受信しました。RequestId: {RequestId}, CaptureIndex: {CaptureIndex}, Succeeded: {Succeeded}, FilePath: {FilePath}, ErrorCode: {ErrorCode}",
             result.RequestId,
             result.CaptureIndex,
             result.Succeeded,
+            result.FilePath,
             result.ErrorCode);
 
         return result;
