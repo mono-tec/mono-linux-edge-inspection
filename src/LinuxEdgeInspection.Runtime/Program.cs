@@ -15,6 +15,11 @@ var cameraOptions =
     ?? throw new InvalidOperationException(
         "appsettings.jsonのCamera設定を読み込めませんでした。");
 
+var resultFilePath =
+    builder.Configuration["Runtime:ResultFilePath"]
+    ?? throw new InvalidOperationException(
+        "appsettings.jsonのRuntime:ResultFilePath設定を読み込めませんでした。");
+
 builder.Services.AddSingleton(cameraOptions);
 
 builder.Services.AddSingleton<
@@ -44,6 +49,11 @@ builder.Services.AddSingleton<
 builder.Services.AddSingleton<
     ICameraService,
     V4L2CameraService>();
+
+builder.Services.AddSingleton<
+    IRuntimeCaptureResultWriter>(
+        new RuntimeCaptureResultWriter(
+            resultFilePath));
 
 builder.Services.AddSingleton<
     ICameraRuntimeService,

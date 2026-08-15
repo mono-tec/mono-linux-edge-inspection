@@ -1,5 +1,6 @@
 ﻿using LinuxEdgeInspection.Camera.Abstractions.Models;
 using LinuxEdgeInspection.Camera.Abstractions.Services;
+using LinuxEdgeInspection.Runtime.Models;
 using LinuxEdgeInspection.Runtime.Services;
 
 namespace LinuxEdgeInspection.Runtime.Tests;
@@ -213,7 +214,8 @@ public sealed class CameraRuntimeServiceTests
             Assert.Throws<ArgumentNullException>(
                 () => new CameraRuntimeService(
                     null!,
-                    CreateOptions()));
+                    CreateOptions(),
+                    new FakeRuntimeCaptureResultWriter()));
 
         Assert.Equal(
             "cameraService",
@@ -230,7 +232,8 @@ public sealed class CameraRuntimeServiceTests
             Assert.Throws<ArgumentNullException>(
                 () => new CameraRuntimeService(
                     cameraService,
-                    null!));
+                    null!,
+                    new FakeRuntimeCaptureResultWriter()));
 
         Assert.Equal(
             "cameraOptions",
@@ -238,11 +241,14 @@ public sealed class CameraRuntimeServiceTests
     }
 
     private static CameraRuntimeService CreateService(
-        ICameraService cameraService)
+        ICameraService cameraService,
+        IRuntimeCaptureResultWriter? resultWriter = null)
     {
         return new CameraRuntimeService(
             cameraService,
-            CreateOptions());
+            CreateOptions(),
+            resultWriter
+                ?? new FakeRuntimeCaptureResultWriter());
     }
 
     private static CameraOptions CreateOptions()
@@ -392,4 +398,28 @@ public sealed class CameraRuntimeServiceTests
             return Task.CompletedTask;
         }
     }
+
+    private sealed class FakeRuntimeCaptureResultWriter
+    : IRuntimeCaptureResultWriter
+    {
+        public List<RuntimeCaptureResult> Results { get; } = [];
+
+        public CancellationToken
+            CancellationToken
+        { get; private set; }
+
+        public Task WriteAsync(
+            RuntimeCaptureResult result,
+            CancellationToken cancellationToken = default)
+        {
+            Results.Add(result);
+
+            CancellationToken =
+                cancellationToken;
+
+            return Task.CompletedTask;
+        }
+    }
+
 }
+

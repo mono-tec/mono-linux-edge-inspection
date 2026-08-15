@@ -1,5 +1,6 @@
 ﻿using LinuxEdgeInspection.Camera.Abstractions.Models;
 using LinuxEdgeInspection.Camera.Abstractions.Services;
+using LinuxEdgeInspection.Runtime.Models;
 
 namespace LinuxEdgeInspection.Runtime.Services;
 
@@ -11,6 +12,7 @@ public sealed class CameraRuntimeService
 {
     private readonly ICameraService _cameraService;
     private readonly CameraOptions _cameraOptions;
+    private readonly IRuntimeCaptureResultWriter _resultWriter;
 
     /// <summary>
     /// <see cref="CameraRuntimeService"/>を初期化します。
@@ -21,9 +23,13 @@ public sealed class CameraRuntimeService
     /// <param name="cameraOptions">
     /// カメラ設定です。
     /// </param>
+    /// <param name="resultWriter">
+    /// 撮影Runtimeの実行結果を保存するサービスです。
+    /// </param>
     public CameraRuntimeService(
         ICameraService cameraService,
-        CameraOptions cameraOptions)
+        CameraOptions cameraOptions,
+        IRuntimeCaptureResultWriter resultWriter)
     {
         _cameraService = cameraService
             ?? throw new ArgumentNullException(
@@ -32,6 +38,9 @@ public sealed class CameraRuntimeService
         _cameraOptions = cameraOptions
             ?? throw new ArgumentNullException(
                 nameof(cameraOptions));
+
+        _resultWriter = resultWriter
+            ?? throw new ArgumentNullException(nameof(resultWriter));
     }
 
     /// <inheritdoc />
@@ -70,6 +79,20 @@ public sealed class CameraRuntimeService
                 Console.WriteLine(
                     "カメラを利用できる環境ではないため、撮影処理を終了します。");
 
+                var unavailableResult =
+                    new RuntimeCaptureResult(
+                        Succeeded: false,
+                        FilePath: null,
+                        CompletedAt: DateTimeOffset.UtcNow,
+                        ErrorCode: "CAMERA_NOT_AVAILABLE",
+                        ErrorMessage: status.Message);
+
+                await _resultWriter.WriteAsync(
+                    unavailableResult,
+                    cancellationToken);
+
+                Environment.ExitCode = 1;
+
                 return;
             }
 
@@ -91,7 +114,23 @@ public sealed class CameraRuntimeService
                     new CameraCaptureRequest(),
                     cancellationToken);
 
+            // 撮影結果をRuntimeCaptureResultに変換して保存します。
+            var runtimeResult =
+            new RuntimeCaptureResult(
+                Succeeded: captureResult.Succeeded,
+                FilePath: captureResult.Succeeded
+                    ? captureResult.FilePath
+                    : null,
+                CompletedAt: DateTimeOffset.UtcNow,
+                ErrorCode: captureResult.ErrorCode,
+                ErrorMessage: captureResult.ErrorMessage);
+
+            await _resultWriter.WriteAsync(
+                runtimeResult,
+                cancellationToken);
+
             WriteCaptureResult(captureResult);
+
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
