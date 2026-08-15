@@ -69,6 +69,25 @@ builder.Services.AddSingleton<
     ISystemCommandRunner,
     SystemCommandRunner>();
 
+
+//
+// Capture Runtime結果読込サービス
+//
+// Runtimeが出力したcapture-result.jsonを読み込みます。
+//
+builder.Services.AddSingleton<ICaptureRuntimeResultReader>(
+    serviceProvider =>
+    {
+        var options =
+            serviceProvider.GetRequiredService<
+                IOptions<CaptureRuntimeLauncherOptions>>()
+                .Value;
+
+        return new CaptureRuntimeResultReader(
+            options.ResultFilePath);
+    });
+
+
 //
 // Capture Runtime起動サービス
 //
@@ -82,21 +101,25 @@ builder.Services.AddSingleton<
 // SystemdCaptureRuntimeLauncherを生成するため、
 // Factory形式でDI登録します。
 //
-builder.Services.AddSingleton<
-    ICaptureRuntimeLauncher>(
+builder.Services.AddSingleton<ICaptureRuntimeLauncher>(
     serviceProvider =>
     {
         var commandRunner =
             serviceProvider.GetRequiredService<
                 ISystemCommandRunner>();
 
+        var resultReader =
+            serviceProvider.GetRequiredService<
+                ICaptureRuntimeResultReader>();
+
         var options =
             serviceProvider.GetRequiredService<
                 IOptions<CaptureRuntimeLauncherOptions>>()
-            .Value;
+                .Value;
 
         return new SystemdCaptureRuntimeLauncher(
             commandRunner,
+            resultReader,
             options.SystemctlPath,
             options.ServiceName,
             TimeSpan.FromSeconds(
@@ -114,9 +137,8 @@ builder.Services.AddSingleton<
 // 2. Runtime起動結果をCaptureResultへ変換
 // 3. CaptureResultを呼び出し元へ返却
 //
-// 現時点ではCaptureResultを外部へ送信しません。
-// 将来的にはInspection WorkerへIPC等を介して
-// 返却する構成を想定します。
+// CaptureResultはUnix Domain Socketを介して
+// Inspection Workerへ返却されます.
 //
 builder.Services.AddSingleton<
     ICaptureRequestProcessor,

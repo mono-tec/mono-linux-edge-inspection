@@ -106,12 +106,13 @@ public sealed class CaptureRequestWorkerTests
                 }
 
                 return new CaptureResult(
-                    request.RequestId,
-                    request.CaptureIndex,
-                    true,
-                    DateTimeOffset.Now,
-                    null,
-                    null);
+                    RequestId: request.RequestId,
+                    CaptureIndex: request.CaptureIndex,
+                    Succeeded: true,
+                    CompletedAt: DateTimeOffset.Now,
+                    FilePath: null,
+                    ErrorCode: null,
+                    ErrorMessage: null);
             }
             finally
             {

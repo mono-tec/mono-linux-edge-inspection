@@ -4,7 +4,7 @@
 /// 撮影Runtimeの起動結果を表します。
 /// </summary>
 /// <param name="Succeeded">
-/// 撮影Runtimeの起動に成功したかどうかです。
+/// 撮影Runtimeの起動および撮影処理に成功したかどうかです。
 /// </param>
 /// <param name="ExitCode">
 /// 撮影Runtimeまたは起動コマンドの終了コードです。
@@ -15,6 +15,10 @@
 /// </param>
 /// <param name="CompletedAt">
 /// 起動処理が完了した日時です。
+/// </param>
+/// <param name="FilePath">
+/// 撮影した画像ファイルの保存先パスです。
+/// 撮影に失敗した場合は<c>null</c>です。
 /// </param>
 /// <param name="ErrorCode">
 /// エラーコードです。成功時は<c>null</c>です。
@@ -27,5 +31,6 @@ public sealed record CaptureRuntimeLaunchResult(
     int? ExitCode,
     DateTimeOffset StartedAt,
     DateTimeOffset CompletedAt,
+    string? FilePath,
     string? ErrorCode,
     string? ErrorMessage);

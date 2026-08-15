@@ -32,12 +32,13 @@ public sealed class CaptureRequestQueueTests
         var request = CreateRequest("REQ-001", 1);
         var item = new CaptureRequestQueueItem(request);
         var result = new CaptureResult(
-            request.RequestId,
-            request.CaptureIndex,
-            true,
-            DateTimeOffset.Now,
-            null,
-            null);
+            RequestId: request.RequestId,
+            CaptureIndex: request.CaptureIndex,
+            Succeeded: true,
+            CompletedAt: DateTimeOffset.Now,
+            FilePath: null,
+            ErrorCode: null,
+            ErrorMessage: null);
 
         Assert.True(item.TrySetResult(result));
 

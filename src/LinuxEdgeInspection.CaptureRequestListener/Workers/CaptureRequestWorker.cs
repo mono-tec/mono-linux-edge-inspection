@@ -80,6 +80,7 @@ public sealed class CaptureRequestWorker : BackgroundService
                             CaptureIndex: request.CaptureIndex,
                             Succeeded: false,
                             CompletedAt: DateTimeOffset.Now,
+                            FilePath: null,
                             ErrorCode: "CAPTURE_PROCESSING_FAILED",
                             ErrorMessage:
                                 "Capture Requestの処理中にエラーが発生しました。"));

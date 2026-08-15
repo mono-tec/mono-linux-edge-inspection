@@ -30,12 +30,13 @@ public sealed class ContractSerializationTests
     public void CaptureResult_RoundTripsAsCamelCaseJson()
     {
         var expected = new CaptureResult(
-            "REQ-001",
-            1,
-            false,
-            DateTimeOffset.Parse("2026-08-15T10:00:01+09:00"),
-            "CAPTURE_RUNTIME_LAUNCH_FAILED",
-            "failed");
+            RequestId:"REQ-001",
+            CaptureIndex: 1,
+            Succeeded:  false,
+            CompletedAt:  DateTimeOffset.Parse("2026-08-15T10:00:01+09:00"),
+            FilePath: null,
+            ErrorCode: "CAPTURE_RUNTIME_LAUNCH_FAILED",
+            ErrorMessage: "failed");
 
         var json = JsonSerializer.Serialize(
             expected,

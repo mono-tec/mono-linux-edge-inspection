@@ -29,6 +29,7 @@ public sealed class CaptureRequestProcessor : ICaptureRequestProcessor
             CaptureIndex: request.CaptureIndex,
             Succeeded: launchResult.Succeeded,
             CompletedAt: launchResult.CompletedAt,
+            FilePath: launchResult.FilePath,
             ErrorCode: launchResult.ErrorCode,
             ErrorMessage: launchResult.ErrorMessage);
     }

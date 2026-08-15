@@ -18,6 +18,7 @@ public sealed class SystemdCaptureRuntimeLauncher
         "CAPTURE_RUNTIME_CANCELLED";
 
     private readonly ISystemCommandRunner _commandRunner;
+    private readonly ICaptureRuntimeResultReader _resultReader;
     private readonly string _systemctlPath;
     private readonly string _serviceName;
     private readonly TimeSpan _timeout;
@@ -27,6 +28,9 @@ public sealed class SystemdCaptureRuntimeLauncher
     /// </summary>
     /// <param name="commandRunner">
     /// 外部システムコマンドを実行するサービスです。
+    /// </param>
+    /// <param name="resultReader">
+    /// 撮影Runtimeの実行結果を読み込むサービスです。
     /// </param>
     /// <param name="systemctlPath">
     /// systemctlコマンドのパスです。
@@ -39,6 +43,7 @@ public sealed class SystemdCaptureRuntimeLauncher
     /// </param>
     public SystemdCaptureRuntimeLauncher(
         ISystemCommandRunner commandRunner,
+        ICaptureRuntimeResultReader resultReader,
         string systemctlPath,
         string serviceName,
         TimeSpan timeout)
@@ -46,6 +51,10 @@ public sealed class SystemdCaptureRuntimeLauncher
         _commandRunner = commandRunner
             ?? throw new ArgumentNullException(
                 nameof(commandRunner));
+
+        _resultReader = resultReader
+            ?? throw new ArgumentNullException(
+                nameof(resultReader));
 
         ArgumentException.ThrowIfNullOrWhiteSpace(
             systemctlPath);
@@ -93,6 +102,7 @@ public sealed class SystemdCaptureRuntimeLauncher
                 ExitCode: executionResult.ExitCode,
                 StartedAt: startedAt,
                 CompletedAt: completedAt,
+                FilePath: null,
                 ErrorCode: TimeoutErrorCode,
                 ErrorMessage:
                     "撮影Runtimeの起動処理がタイムアウトしました。");
@@ -105,6 +115,7 @@ public sealed class SystemdCaptureRuntimeLauncher
                 ExitCode: executionResult.ExitCode,
                 StartedAt: startedAt,
                 CompletedAt: completedAt,
+                FilePath: null,
                 ErrorCode: CancelledErrorCode,
                 ErrorMessage:
                     "撮影Runtimeの起動処理がキャンセルされました。");
@@ -123,16 +134,24 @@ public sealed class SystemdCaptureRuntimeLauncher
                 ExitCode: executionResult.ExitCode,
                 StartedAt: startedAt,
                 CompletedAt: completedAt,
+                FilePath: null,
                 ErrorCode: LaunchFailedErrorCode,
                 ErrorMessage: errorMessage);
         }
 
+        // systemctlの実行に成功した場合は、
+        // Runtimeが出力した撮影結果を読み込みます。
+        var runtimeResult =
+            await _resultReader.ReadAsync(
+                cancellationToken);
+
         return new CaptureRuntimeLaunchResult(
-            Succeeded: true,
+            Succeeded: runtimeResult.Succeeded,
             ExitCode: executionResult.ExitCode,
             StartedAt: startedAt,
-            CompletedAt: completedAt,
-            ErrorCode: null,
-            ErrorMessage: null);
+            CompletedAt: runtimeResult.CompletedAt,
+            FilePath: runtimeResult.FilePath,
+            ErrorCode: runtimeResult.ErrorCode,
+            ErrorMessage: runtimeResult.ErrorMessage);
     }
 }

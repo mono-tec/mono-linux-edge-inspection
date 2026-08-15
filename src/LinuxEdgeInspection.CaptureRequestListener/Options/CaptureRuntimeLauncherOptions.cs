@@ -21,4 +21,9 @@ public sealed class CaptureRuntimeLauncherOptions
     /// 起動処理のタイムアウト秒数です。
     /// </summary>
     public int TimeoutSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// 撮影Runtimeの実行結果ファイルのパスです。
+    /// </summary>
+    public string ResultFilePath { get; set; } = string.Empty;
 }

@@ -6,7 +6,7 @@ namespace LinuxEdgeInspection.CaptureRequestListener.Tests;
 public sealed class SystemdCaptureRuntimeLauncherTests
 {
     [Fact]
-    public async Task LaunchAsync_WhenCommandSucceeds_ReturnsSuccessfulResult()
+    public async Task LaunchAsync_WhenCommandAndRuntimeResultSucceed_ReturnsSuccessfulResult()
     {
         var commandRunner =
             new FakeSystemCommandRunner(
@@ -18,19 +18,62 @@ public sealed class SystemdCaptureRuntimeLauncherTests
                     TimedOut: false,
                     Cancelled: false));
 
+        var completedAt =
+            new DateTimeOffset(
+                2026,
+                8,
+                15,
+                8,
+                0,
+                0,
+                TimeSpan.Zero);
+
+        var resultReader =
+            new FakeCaptureRuntimeResultReader
+            {
+                Result =
+                    new CaptureRuntimeResult(
+                        Succeeded: true,
+                        FilePath: "/tmp/capture.jpg",
+                        CompletedAt: completedAt,
+                        ErrorCode: null,
+                        ErrorMessage: null)
+            };
+
         var launcher =
-            CreateLauncher(commandRunner);
+            new SystemdCaptureRuntimeLauncher(
+                commandRunner,
+                resultReader,
+                systemctlPath:
+                    "/usr/bin/systemctl",
+                serviceName:
+                    "linux-edge-inspection-runtime.service",
+                timeout:
+                    TimeSpan.FromSeconds(30));
 
         var result =
             await launcher.LaunchAsync();
 
-        Assert.True(result.Succeeded);
-        Assert.Equal(0, result.ExitCode);
-        Assert.Null(result.ErrorCode);
-        Assert.Null(result.ErrorMessage);
-
         Assert.True(
-            result.CompletedAt >= result.StartedAt);
+            result.Succeeded);
+
+        Assert.Equal(
+            0,
+            result.ExitCode);
+
+        Assert.Equal(
+            "/tmp/capture.jpg",
+            result.FilePath);
+
+        Assert.Equal(
+            completedAt,
+            result.CompletedAt);
+
+        Assert.Null(
+            result.ErrorCode);
+
+        Assert.Null(
+            result.ErrorMessage);
     }
 
     [Fact]
@@ -213,6 +256,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
             Assert.Throws<ArgumentNullException>(
                 () => new SystemdCaptureRuntimeLauncher(
                     null!,
+                    new FakeCaptureRuntimeResultReader(),
                     "/usr/bin/systemctl",
                     "linux-edge-inspection-runtime.service",
                     TimeSpan.FromSeconds(30)));
@@ -233,6 +277,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
             Assert.Throws<ArgumentException>(
                 () => new SystemdCaptureRuntimeLauncher(
                     commandRunner,
+                    new FakeCaptureRuntimeResultReader(),
                     string.Empty,
                     "linux-edge-inspection-runtime.service",
                     TimeSpan.FromSeconds(30)));
@@ -253,6 +298,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
             Assert.Throws<ArgumentException>(
                 () => new SystemdCaptureRuntimeLauncher(
                     commandRunner,
+                    new FakeCaptureRuntimeResultReader(),
                     "/usr/bin/systemctl",
                     string.Empty,
                     TimeSpan.FromSeconds(30)));
@@ -273,6 +319,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => new SystemdCaptureRuntimeLauncher(
                     commandRunner,
+                    new FakeCaptureRuntimeResultReader(),
                     "/usr/bin/systemctl",
                     "linux-edge-inspection-runtime.service",
                     TimeSpan.Zero));
@@ -287,6 +334,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
     {
         return new SystemdCaptureRuntimeLauncher(
             commandRunner,
+            new FakeCaptureRuntimeResultReader(),
             systemctlPath:
                 "/usr/bin/systemctl",
             serviceName:
@@ -349,6 +397,25 @@ public sealed class SystemdCaptureRuntimeLauncherTests
 
             return Task.FromResult(
                 _result);
+        }
+    }
+
+    private sealed class FakeCaptureRuntimeResultReader
+: ICaptureRuntimeResultReader
+    {
+        public CaptureRuntimeResult Result { get; set; } =
+            new(
+                Succeeded: true,
+                FilePath: "/tmp/capture.jpg",
+                CompletedAt: DateTimeOffset.UtcNow,
+                ErrorCode: null,
+                ErrorMessage: null);
+
+        public Task<CaptureRuntimeResult> ReadAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(
+                Result);
         }
     }
 }

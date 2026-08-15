@@ -1,23 +1,17 @@
-namespace LinuxEdgeInspection.Contracts.Capture;
+﻿namespace LinuxEdgeInspection.CaptureRequestListener.Models;
 
 /// <summary>
-/// 1回の撮影結果を表します。
+/// 撮影Runtimeが出力した実行結果を表します。
 /// </summary>
-/// <param name="RequestId">
-/// 撮影要求を識別するIDです。
-/// </param>
-/// <param name="CaptureIndex">
-/// 同一検査内における撮影順序です。
-/// </param>
 /// <param name="Succeeded">
 /// 撮影処理に成功したかどうかです。
-/// </param>
-/// <param name="CompletedAt">
-/// 撮影処理が完了した日時です。
 /// </param>
 /// <param name="FilePath">
 /// 撮影した画像ファイルの保存先パスです。
 /// 撮影に失敗した場合は<c>null</c>です。
+/// </param>
+/// <param name="CompletedAt">
+/// 撮影Runtimeの処理が完了した日時です。
 /// </param>
 /// <param name="ErrorCode">
 /// エラーコードです。成功時は<c>null</c>です。
@@ -25,11 +19,9 @@ namespace LinuxEdgeInspection.Contracts.Capture;
 /// <param name="ErrorMessage">
 /// エラーメッセージです。成功時は<c>null</c>です。
 /// </param>
-public sealed record CaptureResult(
-    string RequestId,
-    int CaptureIndex,
+public sealed record CaptureRuntimeResult(
     bool Succeeded,
-    DateTimeOffset CompletedAt,
     string? FilePath,
+    DateTimeOffset CompletedAt,
     string? ErrorCode,
     string? ErrorMessage);

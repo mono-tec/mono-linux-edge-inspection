@@ -167,6 +167,7 @@ public sealed class UnixDomainSocketCaptureRequestServer : BackgroundService
                 CaptureIndex: request.CaptureIndex,
                 Succeeded: false,
                 CompletedAt: DateTimeOffset.Now,
+                FilePath: null,
                 ErrorCode: InvalidRequestErrorCode,
                 ErrorMessage:
                     "RequestId must not be empty and CaptureIndex must be at least 1."),

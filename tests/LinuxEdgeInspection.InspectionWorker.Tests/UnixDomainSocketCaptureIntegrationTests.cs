@@ -172,12 +172,13 @@ public sealed class UnixDomainSocketCaptureIntegrationTests
                 }
 
                 return new(
-                    true,
-                    0,
-                    startedAt,
-                    DateTimeOffset.Now,
-                    null,
-                    null);
+                    Succeeded: true,
+                    ExitCode: 0,
+                    StartedAt: startedAt,
+                    CompletedAt: DateTimeOffset.Now,
+                    FilePath: null,
+                    ErrorCode: null,
+                    ErrorMessage: null);
             }
             finally
             {
