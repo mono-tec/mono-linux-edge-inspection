@@ -22,10 +22,12 @@
     <File Path="scripts/debian/uninstall-packages.sh" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/LinuxEdgeInspection.Analyzer/LinuxEdgeInspection.Analyzer.csproj" />
     <Project Path="src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj" Id="0cf01b56-230c-4f3d-9b09-f26ea0573ef0" />
     <Project Path="src/LinuxEdgeInspection.Contracts/LinuxEdgeInspection.Contracts.csproj" />
     <Project Path="src/LinuxEdgeInspection.InspectionWorker/LinuxEdgeInspection.InspectionWorker.csproj" />
     <Project Path="src/LinuxEdgeInspection.Ipc/LinuxEdgeInspection.Ipc.csproj" />
+    <Project Path="src/LinuxEdgeInspection.Preprocessor/LinuxEdgeInspection.Preprocessor.csproj" />
     <Project Path="src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj" Id="868d227f-205b-40b4-b565-bca90d221cfc" />
   </Folder>
   <Folder Name="/src/Camera/">
@@ -33,8 +35,10 @@
     <Project Path="src/Camera/LinuxEdgeInspection.Camera.V4L2/LinuxEdgeInspection.Camera.V4L2.csproj" Id="de8c571a-e3f7-4645-9989-f3473d306a17" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/LinuxEdgeInspection.Analyzer.Tests/LinuxEdgeInspection.Analyzer.Tests.csproj" />
     <Project Path="tests/LinuxEdgeInspection.CaptureRequestListener.Tests/LinuxEdgeInspection.CaptureRequestListener.Tests.csproj" Id="9756f9ed-d2ab-4180-8fca-f4927845afb7" />
     <Project Path="tests/LinuxEdgeInspection.InspectionWorker.Tests/LinuxEdgeInspection.InspectionWorker.Tests.csproj" />
+    <Project Path="tests/LinuxEdgeInspection.Preprocessor.Tests/LinuxEdgeInspection.Preprocessor.Tests.csproj" />
     <Project Path="tests/LinuxEdgeInspection.Runtime.Tests/LinuxEdgeInspection.Runtime.Tests.csproj" Id="22b7f869-f60b-4a8b-813e-07a373638f14" />
   </Folder>
   <Folder Name="/tests/Camera/">

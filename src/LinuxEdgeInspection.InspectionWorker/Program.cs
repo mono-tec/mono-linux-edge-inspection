@@ -1,6 +1,8 @@
+using LinuxEdgeInspection.Analyzer.Services;
 using LinuxEdgeInspection.Contracts.Capture;
 using LinuxEdgeInspection.InspectionWorker.Options;
 using LinuxEdgeInspection.InspectionWorker.Services;
+using LinuxEdgeInspection.Preprocessor.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,13 +23,21 @@ builder.Services.AddSingleton<
     UnixDomainSocketCaptureRequestClient>();
 
 builder.Services.AddSingleton<
+    IPreprocessor,
+    DummyPreprocessor>();
+
+builder.Services.AddSingleton<
+    IAnalyzer,
+    DummyAnalyzer>();
+
+builder.Services.AddSingleton<
     InspectionWorkerService>();
 
 using var host =
     builder.Build();
 
 // ------------------------------------------------------------
-// 1回だけCapture Requestを送信する手動実行モード
+// Capture → Preprocess → Analyzeを1回実行する手動確認モード
 // ------------------------------------------------------------
 
 if (args.Contains("--capture-once"))
@@ -42,9 +52,11 @@ if (args.Contains("--capture-once"))
             CaptureIndex: 1,
             RequestedAt: DateTimeOffset.UtcNow);
 
-    var result =
-        await inspectionWorkerService.CaptureAsync(
+    var pipelineResult =
+        await inspectionWorkerService.InspectOnceAsync(
             request);
+
+    var result = pipelineResult.CaptureResult;
 
     // 手動実行時は撮影結果をConsoleにも表示します。
     // ILoggerとは別に出力することで、
@@ -74,7 +86,43 @@ if (args.Contains("--capture-once"))
     Console.WriteLine(
         $"ErrorMessage : {result.ErrorMessage}");
 
-    return result.Succeeded
+    if (pipelineResult.PreprocessResult is not null)
+    {
+        Console.WriteLine();
+        Console.WriteLine(
+            "Preprocess Result");
+        Console.WriteLine(
+            $"Succeeded    : {pipelineResult.PreprocessResult.Succeeded}");
+        Console.WriteLine(
+            $"FilePaths    : {string.Join(", ", pipelineResult.PreprocessResult.FilePaths)}");
+        Console.WriteLine(
+            $"ErrorCode    : {pipelineResult.PreprocessResult.ErrorCode}");
+        Console.WriteLine(
+            $"ErrorMessage : {pipelineResult.PreprocessResult.ErrorMessage}");
+    }
+
+    if (pipelineResult.AnalysisResult is not null)
+    {
+        Console.WriteLine();
+        Console.WriteLine(
+            "Analysis Result");
+        Console.WriteLine(
+            $"Succeeded    : {pipelineResult.AnalysisResult.Succeeded}");
+        Console.WriteLine(
+            $"Judgement    : {pipelineResult.AnalysisResult.Judgement}");
+        Console.WriteLine(
+            $"Label        : {pipelineResult.AnalysisResult.Label}");
+        Console.WriteLine(
+            $"Score        : {pipelineResult.AnalysisResult.Score}");
+        Console.WriteLine(
+            $"ErrorCode    : {pipelineResult.AnalysisResult.ErrorCode}");
+        Console.WriteLine(
+            $"ErrorMessage : {pipelineResult.AnalysisResult.ErrorMessage}");
+    }
+
+    return result.Succeeded &&
+           pipelineResult.PreprocessResult?.Succeeded == true &&
+           pipelineResult.AnalysisResult?.Succeeded == true
         ? 0
         : 1;
 }

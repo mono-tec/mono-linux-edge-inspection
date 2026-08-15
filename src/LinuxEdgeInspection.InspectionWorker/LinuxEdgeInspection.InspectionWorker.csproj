@@ -13,8 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LinuxEdgeInspection.Analyzer\LinuxEdgeInspection.Analyzer.csproj" />
     <ProjectReference Include="..\LinuxEdgeInspection.Contracts\LinuxEdgeInspection.Contracts.csproj" />
     <ProjectReference Include="..\LinuxEdgeInspection.Ipc\LinuxEdgeInspection.Ipc.csproj" />
+    <ProjectReference Include="..\LinuxEdgeInspection.Preprocessor\LinuxEdgeInspection.Preprocessor.csproj" />
   </ItemGroup>
 
   <ItemGroup>
