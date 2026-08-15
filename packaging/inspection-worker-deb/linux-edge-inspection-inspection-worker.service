@@ -1,0 +1,32 @@
+[Unit]
+Description=Linux Edge Inspection Inspection Worker
+
+# Capture Request Listenerより後に起動します。
+# Inspection WorkerはListenerのUnix Domain Socketへ接続するため、
+# Listener側の起動順を先にします。
+After=linux-edge-inspection-capture-request-listener.service
+
+# Listenerを関連サービスとして起動対象に含めます。
+Wants=linux-edge-inspection-capture-request-listener.service
+
+[Service]
+Type=simple
+
+# appsettings.jsonを読み込むため、
+# アプリケーション配置先を作業ディレクトリにします。
+WorkingDirectory=/opt/linux-edge-inspection-inspection-worker
+
+# 本番環境用の設定を使用します。
+Environment=DOTNET_ENVIRONMENT=Production
+
+# Inspection Workerを常駐プロセスとして実行します。
+ExecStart=/usr/bin/linux-edge-inspection-inspection-worker
+
+# 異常終了した場合のみ再起動します。
+Restart=on-failure
+
+# 再起動前に5秒待機します。
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

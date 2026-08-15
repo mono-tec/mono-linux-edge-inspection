@@ -5,6 +5,11 @@ After=network.target
 [Service]
 Type=simple
 
+# Unix Domain Socketを配置する
+# /run/linux-edge-inspection をsystemdによって作成・管理します。
+RuntimeDirectory=linux-edge-inspection
+RuntimeDirectoryMode=0755
+
 # appsettings.jsonを読み込むため、
 # アプリケーション配置先を作業ディレクトリにします。
 WorkingDirectory=/opt/linux-edge-inspection-capture-request-listener

@@ -8,6 +8,10 @@
     <File Path="packaging/capture-request-listener-deb/build-deb.sh" />
     <File Path="packaging/capture-request-listener-deb/linux-edge-inspection-capture-request-listener.service" />
   </Folder>
+  <Folder Name="/packaging/inspection-worker-deb/">
+    <File Path="packaging/inspection-worker-deb/build-deb.sh" />
+    <File Path="packaging/inspection-worker-deb/linux-edge-inspection-inspection-worker.service" />
+  </Folder>
   <Folder Name="/packaging/runtime-deb/">
     <File Path="packaging/runtime-deb/build-deb.sh" />
     <File Path="packaging/runtime-deb/linux-edge-inspection-runtime.service" />
