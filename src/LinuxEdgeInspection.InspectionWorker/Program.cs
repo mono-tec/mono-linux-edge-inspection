@@ -16,12 +16,15 @@ builder.Services.Configure<CaptureRequestClientOptions>(
     builder.Configuration.GetRequiredSection(
         CaptureRequestClientOptions.SectionName));
 
-builder.Services.AddSingleton<ICaptureRequestClient,
+builder.Services.AddSingleton<
+    ICaptureRequestClient,
     UnixDomainSocketCaptureRequestClient>();
 
-builder.Services.AddSingleton<InspectionWorkerService>();
+builder.Services.AddSingleton<
+    InspectionWorkerService>();
 
-var host = builder.Build();
+using var host =
+    builder.Build();
 
 // ------------------------------------------------------------
 // 1回だけCapture Requestを送信する手動実行モード
@@ -30,24 +33,58 @@ var host = builder.Build();
 if (args.Contains("--capture-once"))
 {
     var inspectionWorkerService =
-        host.Services.GetRequiredService<InspectionWorkerService>();
+        host.Services.GetRequiredService<
+            InspectionWorkerService>();
 
-    var request = new CaptureRequest(
-        RequestId: Guid.NewGuid().ToString(),
-        CaptureIndex: 1,
-        RequestedAt: DateTimeOffset.UtcNow);
+    var request =
+        new CaptureRequest(
+            RequestId: Guid.NewGuid().ToString(),
+            CaptureIndex: 1,
+            RequestedAt: DateTimeOffset.UtcNow);
 
-    var result = await inspectionWorkerService.CaptureAsync(
-        request);
+    var result =
+        await inspectionWorkerService.CaptureAsync(
+            request);
 
-    return result.Succeeded ? 0 : 1;
+    // 手動実行時は撮影結果をConsoleにも表示します。
+    // ILoggerとは別に出力することで、
+    // CLIからFilePath等を直接確認できるようにします。
+    Console.WriteLine();
+    Console.WriteLine(
+        "Capture Result");
+
+    Console.WriteLine(
+        $"RequestId    : {result.RequestId}");
+
+    Console.WriteLine(
+        $"CaptureIndex : {result.CaptureIndex}");
+
+    Console.WriteLine(
+        $"Succeeded    : {result.Succeeded}");
+
+    Console.WriteLine(
+        $"FilePath     : {result.FilePath}");
+
+    Console.WriteLine(
+        $"CompletedAt  : {result.CompletedAt}");
+
+    Console.WriteLine(
+        $"ErrorCode    : {result.ErrorCode}");
+
+    Console.WriteLine(
+        $"ErrorMessage : {result.ErrorMessage}");
+
+    return result.Succeeded
+        ? 0
+        : 1;
 }
 
 // ------------------------------------------------------------
 // 通常起動
 // ------------------------------------------------------------
 
-// Equipment Gateway実装前のため、自動Capture Requestは生成しません。
+// Equipment Gateway実装前のため、
+// 通常起動時は自動Capture Requestを生成しません。
 await host.RunAsync();
 
 return 0;
