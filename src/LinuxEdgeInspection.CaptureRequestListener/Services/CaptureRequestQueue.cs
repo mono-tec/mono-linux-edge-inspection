@@ -1,48 +1,31 @@
-﻿using LinuxEdgeInspection.CaptureRequestListener.Models;
+using LinuxEdgeInspection.CaptureRequestListener.Models;
 using System.Threading.Channels;
 
 namespace LinuxEdgeInspection.CaptureRequestListener.Services;
 
 /// <summary>
-/// Channelを使用してPLC撮影要求をFIFOで保持します。
+/// Channelを使用してCapture RequestをFIFOで保持します。
 /// </summary>
-public sealed class CaptureRequestQueue
-    : ICaptureRequestQueue
+public sealed class CaptureRequestQueue : ICaptureRequestQueue
 {
-    private readonly Channel<CaptureRequest> _channel;
+    private readonly Channel<CaptureRequestQueueItem> _channel =
+        Channel.CreateUnbounded<CaptureRequestQueueItem>(
+            new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                AllowSynchronousContinuations = false
+            });
 
-    /// <summary>
-    /// <see cref="CaptureRequestQueue"/>を初期化します。
-    /// </summary>
-    public CaptureRequestQueue()
-    {
-        _channel =
-            Channel.CreateUnbounded<CaptureRequest>(
-                new UnboundedChannelOptions
-                {
-                    SingleReader = true,
-                    SingleWriter = false,
-                    AllowSynchronousContinuations = false
-                });
-    }
-
-    /// <inheritdoc />
     public ValueTask EnqueueAsync(
-        CaptureRequest request,
+        CaptureRequestQueueItem item,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
-        return _channel.Writer.WriteAsync(
-            request,
-            cancellationToken);
+        ArgumentNullException.ThrowIfNull(item);
+        return _channel.Writer.WriteAsync(item, cancellationToken);
     }
 
-    /// <inheritdoc />
-    public ValueTask<CaptureRequest> DequeueAsync(
-        CancellationToken cancellationToken = default)
-    {
-        return _channel.Reader.ReadAsync(
-            cancellationToken);
-    }
+    public ValueTask<CaptureRequestQueueItem> DequeueAsync(
+        CancellationToken cancellationToken = default) =>
+        _channel.Reader.ReadAsync(cancellationToken);
 }

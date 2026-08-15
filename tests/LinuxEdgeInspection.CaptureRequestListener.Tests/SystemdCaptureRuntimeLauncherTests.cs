@@ -56,7 +56,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
         Assert.Equal(
             [
                 "restart",
-                "kakip-edge-platform-runtime.service"
+                "linux-edge-inspection-runtime.service"
             ],
             commandRunner.LastArguments);
 
@@ -88,7 +88,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
         Assert.False(result.Succeeded);
         Assert.Equal(1, result.ExitCode);
         Assert.Equal(
-            "PLC-E001",
+            "CAPTURE_RUNTIME_LAUNCH_FAILED",
             result.ErrorCode);
 
         Assert.Equal(
@@ -117,7 +117,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
 
         Assert.False(result.Succeeded);
         Assert.Equal(
-            "PLC-E001",
+            "CAPTURE_RUNTIME_LAUNCH_FAILED",
             result.ErrorCode);
 
         Assert.Equal(
@@ -147,7 +147,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
         Assert.False(result.Succeeded);
         Assert.Null(result.ExitCode);
         Assert.Equal(
-            "PLC-E002",
+            "CAPTURE_RUNTIME_TIMEOUT",
             result.ErrorCode);
 
         Assert.Equal(
@@ -177,7 +177,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
         Assert.False(result.Succeeded);
         Assert.Null(result.ExitCode);
         Assert.Equal(
-            "PLC-E003",
+            "CAPTURE_RUNTIME_CANCELLED",
             result.ErrorCode);
 
         Assert.Equal(
@@ -214,7 +214,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
                 () => new SystemdCaptureRuntimeLauncher(
                     null!,
                     "/usr/bin/systemctl",
-                    "kakip-edge-platform-runtime.service",
+                    "linux-edge-inspection-runtime.service",
                     TimeSpan.FromSeconds(30)));
 
         Assert.Equal(
@@ -234,7 +234,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
                 () => new SystemdCaptureRuntimeLauncher(
                     commandRunner,
                     string.Empty,
-                    "kakip-edge-platform-runtime.service",
+                    "linux-edge-inspection-runtime.service",
                     TimeSpan.FromSeconds(30)));
 
         Assert.Equal(
@@ -274,7 +274,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
                 () => new SystemdCaptureRuntimeLauncher(
                     commandRunner,
                     "/usr/bin/systemctl",
-                    "kakip-edge-platform-runtime.service",
+                    "linux-edge-inspection-runtime.service",
                     TimeSpan.Zero));
 
         Assert.Equal(
@@ -290,7 +290,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
             systemctlPath:
                 "/usr/bin/systemctl",
             serviceName:
-                "kakip-edge-platform-runtime.service",
+                "linux-edge-inspection-runtime.service",
             timeout:
                 TimeSpan.FromSeconds(30));
     }

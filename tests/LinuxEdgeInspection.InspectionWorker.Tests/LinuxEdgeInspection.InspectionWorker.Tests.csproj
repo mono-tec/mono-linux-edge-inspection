@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -15,11 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\KakipEdgePlatform.PlcListener\KakipEdgePlatform.PlcListener.csproj" />
+    <ProjectReference Include="..\..\src\LinuxEdgeInspection.Contracts\LinuxEdgeInspection.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\LinuxEdgeInspection.Ipc\LinuxEdgeInspection.Ipc.csproj" />
+    <ProjectReference Include="..\..\src\LinuxEdgeInspection.InspectionWorker\LinuxEdgeInspection.InspectionWorker.csproj" />
+    <ProjectReference Include="..\..\src\LinuxEdgeInspection.CaptureRequestListener\LinuxEdgeInspection.CaptureRequestListener.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
-
 </Project>

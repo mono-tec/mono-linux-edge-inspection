@@ -1,6 +1,7 @@
 ﻿using LinuxEdgeInspection.CaptureRequestListener.Options;
 using LinuxEdgeInspection.CaptureRequestListener.Models;
 using LinuxEdgeInspection.CaptureRequestListener.Services;
+using LinuxEdgeInspection.Contracts.Capture;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -34,7 +35,7 @@ namespace LinuxEdgeInspection.CaptureRequestListener.Workers;
 public sealed class FakeCaptureRequestGeneratorWorker
     : BackgroundService
 {
-    private readonly CaptureRequestQueue _requestQueue;
+    private readonly ICaptureRequestQueue _requestQueue;
     private readonly FakeCaptureRequestGeneratorOptions _options;
     private readonly ILogger<FakeCaptureRequestGeneratorWorker> _logger;
 
@@ -57,7 +58,7 @@ public sealed class FakeCaptureRequestGeneratorWorker
     /// <see langword="null"/>の場合にスローされます。
     /// </exception>
     public FakeCaptureRequestGeneratorWorker(
-        CaptureRequestQueue requestQueue,
+        ICaptureRequestQueue requestQueue,
         IOptions<FakeCaptureRequestGeneratorOptions> options,
         ILogger<FakeCaptureRequestGeneratorWorker> logger)
     {
@@ -118,7 +119,9 @@ public sealed class FakeCaptureRequestGeneratorWorker
                 // 開発・検証用のCapture Requestを生成します。
                 var request =
                     new CaptureRequest(
-                        RequestId: requestId,
+                        RequestId: requestId.ToString(
+                            System.Globalization.CultureInfo.InvariantCulture),
+                        CaptureIndex: 1,
                         RequestedAt: DateTimeOffset.Now);
 
                 // 旧実装ではFakePlcSignalServiceを経由していましたが、
@@ -128,7 +131,7 @@ public sealed class FakeCaptureRequestGeneratorWorker
                 // 将来Equipment Gateway側で扱うため、
                 // CaptureRequestListenerからは分離します。
                 await _requestQueue.EnqueueAsync(
-                    request,
+                    new CaptureRequestQueueItem(request),
                     stoppingToken);
 
                 _logger.LogInformation(

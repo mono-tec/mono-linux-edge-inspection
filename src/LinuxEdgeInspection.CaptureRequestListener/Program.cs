@@ -24,6 +24,10 @@ builder.Services.Configure<
     builder.Configuration.GetRequiredSection(
         "CaptureRuntimeLauncher"));
 
+builder.Services.Configure<CaptureRequestEndpointOptions>(
+    builder.Configuration.GetRequiredSection(
+        CaptureRequestEndpointOptions.SectionName));
+
 //
 // Capture Request Queue
 //
@@ -129,6 +133,9 @@ builder.Services.AddSingleton<
 //
 builder.Services.AddHostedService<
     CaptureRequestWorker>();
+
+builder.Services.AddHostedService<
+    UnixDomainSocketCaptureRequestServer>();
 
 //
 // Fake Capture Request生成Worker

@@ -9,13 +9,13 @@ public sealed class SystemdCaptureRuntimeLauncher
     : ICaptureRuntimeLauncher
 {
     private const string LaunchFailedErrorCode =
-        "PLC-E001";
+        "CAPTURE_RUNTIME_LAUNCH_FAILED";
 
     private const string TimeoutErrorCode =
-        "PLC-E002";
+        "CAPTURE_RUNTIME_TIMEOUT";
 
     private const string CancelledErrorCode =
-        "PLC-E003";
+        "CAPTURE_RUNTIME_CANCELLED";
 
     private readonly ISystemCommandRunner _commandRunner;
     private readonly string _systemctlPath;
