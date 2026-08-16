@@ -49,6 +49,11 @@ if (OperatingSystem.IsLinux())
     // journalctl実行時の引数を組み立てるサービスを登録します。
     builder.Services.AddSingleton<JournalctlArgumentsBuilder>();
 
+    // journalctlプロセスを実行するサービスを登録します。
+    builder.Services.AddSingleton<
+        IJournalctlProcessRunner,
+        JournalctlProcessRunner>();
+
     // Linuxではjournaldを参照する実装を使用します。
     builder.Services.AddSingleton<
         ILogViewerService,
