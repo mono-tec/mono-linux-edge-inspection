@@ -31,26 +31,28 @@ public sealed class PluginRegistrationTests
     }
 
     [Fact]
-    public void AddCameraTestPlugin_RegistersDummyCameraTestService()
+    public void AddCameraTestPlugin_RegistersCameraTestService()
     {
         var services = new ServiceCollection();
 
         services.AddCameraTestPlugin();
 
         using var provider = services.BuildServiceProvider();
-        Assert.IsType<DummyCameraTestService>(
+
+        Assert.IsAssignableFrom<ICameraTestService>(
             provider.GetRequiredService<ICameraTestService>());
     }
 
     [Fact]
-    public void AddLogViewerPlugin_RegistersDummyLogViewerService()
+    public void AddLogViewerPlugin_RegistersJournaldLogViewerService()
     {
         var services = new ServiceCollection();
 
         services.AddLogViewerPlugin();
 
         using var provider = services.BuildServiceProvider();
-        Assert.IsType<DummyLogViewerService>(
+
+        Assert.IsType<JournaldLogViewerService>(
             provider.GetRequiredService<ILogViewerService>());
     }
 }

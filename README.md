@@ -7,16 +7,19 @@ Linux環境上でカメラ撮影や検査処理を実行するための、
 Linux上のUSBカメラを使用して画像を取得し、  
 前処理・分析までを段階的に実行するための基本的な実行基盤を検証・実装しています。
 
+また、Blazorを使用したManagement UIとPlugin基盤を用意し、  
+監視・確認・保守機能をPluginとして追加できる構成を検証しています。
+
 > [!NOTE]
 > 本プロジェクトは現在開発中です。  
 > 現在は、Capture Requestの受付からUSBカメラ撮影、画像前処理、分析までをつなぐ  
-> 最小Pipelineを中心に実装・検証しています。
+> 最小Pipelineと、Blazor Management UI / Plugin基盤を中心に実装・検証しています。
 
 ---
 
 ## ■ 現在の構成
 
-現在は、主に以下のコンポーネントで構成されています。
+現在の検査Pipelineは、主に以下のコンポーネントで構成されています。
 
 ```text
 InspectionWorker
@@ -64,6 +67,17 @@ Analyze
 
 現在、PreprocessorおよびAnalyzerは独立Projectとして実装していますが、  
 独立ProcessではなくInspectionWorker Process内で利用します。
+
+Management UIは検査Pipelineとは分離しており、  
+Blazor HostへPluginを組み込む構成としています。
+
+```text
+LinuxEdgeInspection.Management
+      │
+      ├─ Disk Monitor Plugin
+      ├─ Camera Test Plugin
+      └─ Log Viewer Plugin
+```
 
 ---
 
@@ -207,6 +221,127 @@ AnalyzerはPreprocessResultそのものを受け取らず、
 
 ---
 
+### LinuxEdgeInspection.Management
+
+Blazor Interactive Serverを使用したManagement UIです。
+
+検査Pipelineとは分離し、  
+監視・確認・保守機能をPluginとして追加できる構成としています。
+
+現在、以下のPluginを実装しています。
+
+```text
+Disk Monitor
+Camera Test
+Log Viewer
+```
+
+PluginはManagement Hostへ組み込まれ、  
+Plugin RegistryからNavigationとRoutingを構成します。
+
+現在のPlugin構成：
+
+```text
+Management Host
+      │
+      ├─ Management.Abstractions
+      │
+      ├─ Management.Core
+      │
+      └─ Plugins
+           ├─ DiskMonitor
+           ├─ CameraTest
+           └─ LogViewer
+```
+
+Camera TestおよびLog Viewerは現在Dummy Serviceを使用しています。
+
+そのため、
+
+- Camera Test → InspectionWorker実通信
+- Log Viewer → Linux実ログ / journalctl
+
+は今後の実装対象です。
+
+---
+
+## ■ Management Plugin
+
+Management向けPluginは以下へ配置しています。
+
+```text
+src/Management/Plugins/
+```
+
+各PluginはManagement Hostへ直接依存せず、  
+`LinuxEdgeInspection.Management.Abstractions` に依存します。
+
+主なPlugin接続方式は以下です。
+
+```text
+Plugin Service Registration
+      ↓
+Plugin Discovery
+      ↓
+Plugin Registry
+      ↓
+Navigation / Routing
+      ↓
+Razor Component
+```
+
+### Disk Monitor
+
+ディスク利用状況を表示するPluginです。
+
+現在、Windows / Linuxそれぞれの環境に対応した  
+Disk Information Serviceを使用します。
+
+### Camera Test
+
+カメラ・検査Pipelineの確認画面を想定したPluginです。
+
+現在はDummy Serviceを使用し、以下の結果を表示します。
+
+```text
+Capture
+Preprocess
+Analysis
+Judgement
+Label
+Error
+```
+
+現在のDummy結果例：
+
+```text
+Capture    = Success
+Preprocess = Success
+Analysis   = Success
+Judgement  = Ok
+Label      = DUMMY_OK
+```
+
+将来は`ICameraTestService`の実装を差し替え、  
+InspectionWorkerと接続する予定です。
+
+### Log Viewer
+
+ログ表示用Pluginです。
+
+現在はDummy Serviceから以下の情報を表示します。
+
+```text
+Timestamp
+Level
+Component
+Message
+```
+
+Linuxのjournalやsystemdログとの接続は今後の実装対象です。
+
+---
+
 ## ■ Solution構成
 
 ```text
@@ -215,6 +350,15 @@ mono-linux-edge-inspection/
 │  ├─ Camera/
 │  │  ├─ LinuxEdgeInspection.Camera.Abstractions/
 │  │  └─ LinuxEdgeInspection.Camera.V4L2/
+│  │
+│  ├─ Management/
+│  │  ├─ LinuxEdgeInspection.Management/
+│  │  ├─ LinuxEdgeInspection.Management.Abstractions/
+│  │  ├─ LinuxEdgeInspection.Management.Core/
+│  │  └─ Plugins/
+│  │     ├─ LinuxEdgeInspection.Plugin.DiskMonitor/
+│  │     ├─ LinuxEdgeInspection.Plugin.CameraTest/
+│  │     └─ LinuxEdgeInspection.Plugin.LogViewer/
 │  │
 │  ├─ LinuxEdgeInspection.Contracts/
 │  ├─ LinuxEdgeInspection.Runtime/
@@ -231,12 +375,14 @@ mono-linux-edge-inspection/
 │  ├─ LinuxEdgeInspection.CaptureRequestListener.Tests/
 │  ├─ LinuxEdgeInspection.InspectionWorker.Tests/
 │  ├─ LinuxEdgeInspection.Preprocessor.Tests/
-│  └─ LinuxEdgeInspection.Analyzer.Tests/
+│  ├─ LinuxEdgeInspection.Analyzer.Tests/
+│  └─ LinuxEdgeInspection.Management.Tests/
 │
 ├─ packaging/
 │  ├─ runtime-deb/
 │  ├─ capture-request-listener-deb/
-│  └─ inspection-worker-deb/
+│  ├─ inspection-worker-deb/
+│  └─ management-deb/
 │
 ├─ scripts/
 │  └─ sbom/
@@ -258,13 +404,15 @@ mono-linux-edge-inspection/
 - Linux
 - x64 / amd64
 - .NET 10
+- ASP.NET Core 10
 - systemd
 - V4L2対応USBカメラ
 - `v4l-utils`
 
 GitHub Actionsでは `linux-x64` 向けにframework-dependent形式でpublishします。
 
-そのため、実行環境には.NET 10 Runtimeが必要です。
+Runtime / Listener / Workerの実行には.NET 10 Runtime、  
+Management UIの実行にはASP.NET Core Runtime 10が必要です。
 
 ---
 
@@ -287,6 +435,19 @@ Solution全体のUnit Testは以下で実行できます。
 dotnet test LinuxEdgeInspection.slnx --configuration Release
 ```
 
+現在は、検査Pipelineに加えてManagement Plugin基盤についてもUnit Testを実装しています。
+
+主なManagement系テスト対象：
+
+```text
+PluginDiscovery
+PluginRegistry
+Plugin Manifest
+Plugin DI Registration
+DummyCameraTestService
+DummyLogViewerService
+```
+
 ---
 
 ## ■ Runtimeの実行
@@ -294,8 +455,7 @@ dotnet test LinuxEdgeInspection.slnx --configuration Release
 Runtimeは1回の起動につき1回の撮影を行います。
 
 ```bash
-dotnet run \
-  --project src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj
+dotnet run   --project src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj
 ```
 
 カメラ設定は `appsettings.json` から読み込みます。
@@ -305,8 +465,7 @@ dotnet run \
 ## ■ Capture Request Listenerの実行
 
 ```bash
-dotnet run \
-  --project src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj
+dotnet run   --project src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj
 ```
 
 Production環境では、InspectionWorkerからUnix Domain Socket経由でCapture Requestを受け取ります。
@@ -318,9 +477,7 @@ Production環境では、InspectionWorkerからUnix Domain Socket経由でCaptur
 InspectionWorkerでは、Pipeline確認用として `--capture-once` を使用できます。
 
 ```bash
-dotnet run \
-  --project src/LinuxEdgeInspection.InspectionWorker/LinuxEdgeInspection.InspectionWorker.csproj \
-  -- --capture-once
+dotnet run   --project src/LinuxEdgeInspection.InspectionWorker/LinuxEdgeInspection.InspectionWorker.csproj   -- --capture-once
 ```
 
 現在の `--capture-once` では、以下を1回実行します。
@@ -346,6 +503,37 @@ InspectionWorker自身から自動的にCapture Requestを生成しません。
 
 ---
 
+## ■ Management UIの実行
+
+開発環境では以下でManagement Hostを起動できます。
+
+```bash
+dotnet run   --project src/Management/LinuxEdgeInspection.Management/LinuxEdgeInspection.Management.csproj
+```
+
+Debian Packageとしてインストールした場合は、  
+systemd Serviceとして起動します。
+
+```bash
+sudo systemctl start linux-edge-inspection-management.service
+```
+
+Production用Packageでは、Management Hostを以下で待ち受けます。
+
+```text
+http://0.0.0.0:8080
+```
+
+同一ネットワーク上のブラウザからは以下の形式でアクセスできます。
+
+```text
+http://<Linux端末のIPアドレス>:8080
+```
+
+現在はKestrelを直接公開し、Nginx等のReverse Proxyは使用していません。
+
+---
+
 ## ■ Debian Package
 
 GitHub Actionsでは以下のDebian Packageを生成します。
@@ -356,6 +544,8 @@ linux-edge-inspection-runtime_<version>_amd64.deb
 linux-edge-inspection-capture-request-listener_<version>_amd64.deb
 
 linux-edge-inspection-inspection-worker_<version>_amd64.deb
+
+linux-edge-inspection-management_<version>_amd64.deb
 ```
 
 PreprocessorおよびAnalyzerは現在InspectionWorker Process内で利用するため、  
@@ -385,6 +575,14 @@ Inspection Workerパッケージには主に以下が含まれます。
 /lib/systemd/system/linux-edge-inspection-inspection-worker.service
 ```
 
+Managementパッケージには主に以下が含まれます。
+
+```text
+/opt/linux-edge-inspection-management/
+/usr/bin/linux-edge-inspection-management
+/lib/systemd/system/linux-edge-inspection-management.service
+```
+
 ライセンス関連文書は各パッケージの `/usr/share/doc/` 配下へ配置します。
 
 ---
@@ -402,9 +600,12 @@ SBOMは、実際にpublishされた成果物を対象として生成します。
 LinuxEdgeInspection.Runtime
 LinuxEdgeInspection.CaptureRequestListener
 LinuxEdgeInspection.InspectionWorker
+LinuxEdgeInspection.Management
 ```
 
 Preprocessor / AnalyzerはInspectionWorkerのpublish成果物に含まれます。
+
+Management PluginはManagementのpublish成果物に含まれます。
 
 ローカル環境では以下のPowerShellスクリプトからSBOMを生成できます。
 
@@ -492,6 +693,11 @@ LICENSE
 - Dummy Preprocessorによる前処理Interface検証
 - Dummy Analyzerによる分析Interface検証
 - Unix Domain SocketによるCapture IPC
+- Blazor Management UI
+- Plugin方式によるManagement機能追加
+- Disk Monitor Plugin
+- Dummy Camera Test Plugin
+- Dummy Log Viewer Plugin
 - Debian Packageによる配布
 - Unit Test
 - SBOM生成
@@ -508,7 +714,10 @@ LICENSE
 - 実AI / Rule-based Analysis
 - Inspection State管理
 - Inspection Recovery
-- Management UI
+- Camera Test PluginとInspectionWorkerの実通信
+- Log Viewer PluginとLinux実ログの連携
+- Management用service user / group設計
+- Unix Domain Socketの権限整理
 - Preprocessor / Analyzerの独立Process化
 - Preprocess / Analysis IPC
 
@@ -521,6 +730,9 @@ LICENSE
 
 設備固有の制御や実際のAIモデルについては、  
 共通基盤から分離する方針です。
+
+また、Management機能についてもPluginとして分離し、  
+用途や構成に応じて必要な機能をHostへ組み込める構造を採用しています。
 
 現在は、
 
@@ -539,5 +751,18 @@ Result
 という検査処理を構成する各責務を分離し、  
 段階的に実装・検証しています。
 
-将来は、Equipment GatewayやManagement等を追加できる構造を維持しつつ、  
-現在の最小PoCではLinux上でのCapture Pipeline成立確認を優先します。
+Management側についても、
+
+```text
+Management Host
+      ↓
+Plugin
+      ↓
+Service
+```
+
+という責務分離を基本とし、  
+実装を段階的にDummyから実機能へ差し替えられる構造を維持します。
+
+将来はEquipment Gatewayや実設備連携を追加できる構造を維持しつつ、  
+現在はLinux上での検査PipelineとManagement基盤の成立確認を優先しています。

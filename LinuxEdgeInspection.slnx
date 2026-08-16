@@ -36,6 +36,7 @@
   </Folder>
   <Folder Name="/src/Management/">
     <Project Path="src/Management/LinuxEdgeInspection.Management.Abstractions/LinuxEdgeInspection.Management.Abstractions.csproj" />
+    <Project Path="src/Management/LinuxEdgeInspection.Management.Api/LinuxEdgeInspection.Management.Api.csproj" />
     <Project Path="src/Management/LinuxEdgeInspection.Management.Core/LinuxEdgeInspection.Management.Core.csproj" />
     <Project Path="src/Management/LinuxEdgeInspection.Management/LinuxEdgeInspection.Management.csproj" />
   </Folder>
@@ -55,6 +56,7 @@
     <Project Path="tests/Camera/LinuxEdgeInspection.Camera.V4L2.Tests/LinuxEdgeInspection.Camera.V4L2.Tests.csproj" Id="a98cf1c2-b828-40ac-96d6-8b748a34b420" />
   </Folder>
   <Folder Name="/tests/Management/">
+    <Project Path="tests/Management/LinuxEdgeInspection.Management.Api.Tests/LinuxEdgeInspection.Management.Api.Tests.csproj" />
     <Project Path="tests/Management/LinuxEdgeInspection.Management.Tests/LinuxEdgeInspection.Management.Tests.csproj" />
   </Folder>
   <Folder Name="/ソリューション項目/">

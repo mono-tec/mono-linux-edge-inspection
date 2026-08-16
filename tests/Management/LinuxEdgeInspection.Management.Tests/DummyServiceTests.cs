@@ -1,5 +1,6 @@
 using LinuxEdgeInspection.Plugin.CameraTest.Services;
 using LinuxEdgeInspection.Plugin.LogViewer.Services;
+using LinuxEdgeInspection.Plugin.LogViewer.Models;
 
 namespace LinuxEdgeInspection.Management.Tests;
 
@@ -25,7 +26,11 @@ public sealed class DummyServiceTests
     {
         var service = new DummyLogViewerService();
 
-        var logs = await service.GetLogsAsync(CancellationToken.None);
+        var page = await service.GetLogsAsync(new LogQuery(
+            LogApplication.Management,
+            DateOnly.FromDateTime(DateTime.Today),
+            LogLevelFilter.All));
+        var logs = page.Entries;
 
         Assert.Equal(4, logs.Count);
         Assert.All(logs, entry =>

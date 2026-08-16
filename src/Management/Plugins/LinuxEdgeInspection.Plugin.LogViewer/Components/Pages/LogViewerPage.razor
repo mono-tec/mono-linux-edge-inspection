@@ -9,8 +9,39 @@
         <h1>Log Viewer</h1>
         <p class="page-description">Recent platform events provided by the configured log service.</p>
     </div>
-    <button class="button button-secondary" @onclick="LoadLogsAsync">Refresh</button>
+    <button class="button button-secondary" @onclick="SearchAsync">Refresh</button>
 </div>
+
+<div class="filter-grid">
+    <label>
+        Application
+        <select @bind="_application">
+            @foreach (var application in Enum.GetValues<LogApplication>())
+            {
+                <option value="@application">@GetApplicationName(application)</option>
+            }
+        </select>
+    </label>
+    <label>
+        Date
+        <input type="date" @bind="_date" />
+    </label>
+    <label>
+        Level
+        <select @bind="_level">
+            @foreach (var level in Enum.GetValues<LogLevelFilter>())
+            {
+                <option value="@level">@level</option>
+            }
+        </select>
+    </label>
+    <button class="button button-primary" @onclick="SearchAsync">Search</button>
+</div>
+
+@if (_error is not null)
+{
+    <div class="empty-state">@_error</div>
+}
 
 <div class="table-shell">
     <table class="data-table">
@@ -23,7 +54,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var entry in _entries)
+            @foreach (var entry in _page.Entries)
             {
                 <tr>
                     <td class="timestamp">@entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss zzz")</td>
@@ -36,10 +67,53 @@
     </table>
 </div>
 
+<div class="page-actions">
+    <button class="button button-secondary"
+            @onclick="LoadNewerAsync"
+            disabled="@(!_page.CanLoadNewer)">Newer</button>
+    <button class="button button-secondary"
+            @onclick="LoadOlderAsync"
+            disabled="@(!_page.CanLoadOlder)">Older</button>
+</div>
+
 @code {
-    private IReadOnlyList<LogEntry> _entries = [];
+    private LogApplication _application = LogApplication.Management;
+    private DateTime _date = DateTime.Today;
+    private LogLevelFilter _level = LogLevelFilter.All;
+    private LogPage _page = LogPage.Empty;
+    private string? _error;
 
-    protected override async Task OnInitializedAsync() => await LoadLogsAsync();
+    protected override async Task OnInitializedAsync() => await SearchAsync();
 
-    private async Task LoadLogsAsync() => _entries = await LogViewerService.GetLogsAsync();
+    private Task SearchAsync() => LoadAsync(null, LogPageDirection.Initial);
+
+    private Task LoadOlderAsync() =>
+        LoadAsync(_page.OldestCursor, LogPageDirection.Older);
+
+    private Task LoadNewerAsync() =>
+        LoadAsync(_page.NewestCursor, LogPageDirection.Newer);
+
+    private async Task LoadAsync(string? cursor, LogPageDirection direction)
+    {
+        _error = null;
+        try
+        {
+            _page = await LogViewerService.GetLogsAsync(new LogQuery(
+                _application,
+                DateOnly.FromDateTime(_date),
+                _level,
+                cursor,
+                direction));
+        }
+        catch (Exception exception)
+        {
+            _page = LogPage.Empty;
+            _error = exception.Message;
+        }
+    }
+
+    private static string GetApplicationName(LogApplication application) =>
+        application == LogApplication.ManagementApi
+            ? "Management.Api"
+            : application.ToString();
 }

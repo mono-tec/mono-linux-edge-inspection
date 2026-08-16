@@ -12,6 +12,15 @@ public sealed class DummyCameraTestService : ICameraTestService
         cancellationToken.ThrowIfCancellationRequested();
 
         return Task.FromResult(new CameraTestResult(
+            RequestId: "dummy-request",
+            Captures:
+            [
+                new CameraTestCaptureResult(
+                    CaptureSucceeded: true,
+                    CaptureIndex: 1,
+                    FilePath: "/tmp/dummy-capture.jpg",
+                    ViewUrl: null)
+            ],
             Capture: "Success",
             Preprocess: "Success",
             Analysis: "Success",

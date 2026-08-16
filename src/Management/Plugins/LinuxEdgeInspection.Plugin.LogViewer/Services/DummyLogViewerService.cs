@@ -7,7 +7,9 @@ namespace LinuxEdgeInspection.Plugin.LogViewer.Services;
 /// </summary>
 public sealed class DummyLogViewerService : ILogViewerService
 {
-    public Task<IReadOnlyList<LogEntry>> GetLogsAsync(CancellationToken cancellationToken = default)
+    public Task<LogPage> GetLogsAsync(
+        LogQuery query,
+        CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var now = DateTimeOffset.Now;
@@ -20,6 +22,11 @@ public sealed class DummyLogViewerService : ILogViewerService
             new(now, "Information", "Inspection", "Waiting for the next inspection request.")
         ];
 
-        return Task.FromResult(entries);
+        return Task.FromResult(new LogPage(
+            entries,
+            entries.LastOrDefault()?.Cursor,
+            entries.FirstOrDefault()?.Cursor,
+            CanLoadOlder: false,
+            CanLoadNewer: false));
     }
 }

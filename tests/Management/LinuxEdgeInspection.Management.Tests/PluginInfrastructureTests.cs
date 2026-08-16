@@ -9,6 +9,28 @@ namespace LinuxEdgeInspection.Management.Tests;
 public sealed class PluginInfrastructureTests
 {
     [Fact]
+    public void PluginAssemblies_ForWindows_ExcludesLogViewer()
+    {
+        var plugins = PluginDiscovery.Discover(
+            PluginAssemblies.GetForOperatingSystem(isLinux: false));
+
+        Assert.DoesNotContain(
+            plugins,
+            plugin => plugin.Manifest.Id == "log-viewer");
+    }
+
+    [Fact]
+    public void PluginAssemblies_ForLinux_IncludesLogViewer()
+    {
+        var plugins = PluginDiscovery.Discover(
+            PluginAssemblies.GetForOperatingSystem(isLinux: true));
+
+        Assert.Contains(
+            plugins,
+            plugin => plugin.Manifest.Id == "log-viewer");
+    }
+
+    [Fact]
     public void Discover_FindsAllManagementPlugins()
     {
         var plugins = PluginDiscovery.Discover(

@@ -4,5 +4,7 @@ namespace LinuxEdgeInspection.Plugin.LogViewer.Services;
 
 public interface ILogViewerService
 {
-    Task<IReadOnlyList<LogEntry>> GetLogsAsync(CancellationToken cancellationToken = default);
+    Task<LogPage> GetLogsAsync(
+        LogQuery query,
+        CancellationToken cancellationToken = default);
 }

@@ -16,7 +16,7 @@
 
 @if (_result is null)
 {
-    <div class="empty-state">Select <strong>Run Camera Test</strong> to execute the dummy inspection.</div>
+    <div class="empty-state">Select <strong>Run Camera Test</strong> to execute one inspection.</div>
 }
 else
 {
@@ -27,6 +27,37 @@ else
         <ResultItem Name="Judgement" Value="@_result.Judgement" Highlight="true" />
         <ResultItem Name="Label" Value="@_result.Label" />
         <ResultItem Name="Error" Value="@(_result.Error ?? "None")" />
+    </div>
+
+    <div class="table-shell">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>CaptureIndex</th>
+                    <th>FilePath</th>
+                    <th>View</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var capture in _result.Captures)
+                {
+                    <tr>
+                        <td>@capture.CaptureIndex</td>
+                        <td>@(capture.FilePath ?? "None")</td>
+                        <td>
+                            @if (capture.ViewUrl is not null)
+                            {
+                                <a href="@capture.ViewUrl" target="_blank" rel="noopener noreferrer">Open image</a>
+                            }
+                            else
+                            {
+                                <span>Unavailable</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 }
 
@@ -41,6 +72,18 @@ else
         try
         {
             _result = await CameraTestService.RunAsync();
+        }
+        catch (Exception exception)
+        {
+            _result = new CameraTestResult(
+                RequestId: string.Empty,
+                Captures: [],
+                Capture: "Failed",
+                Preprocess: "Not Executed",
+                Analysis: "Not Executed",
+                Judgement: "Unknown",
+                Label: null,
+                Error: exception.Message);
         }
         finally
         {
