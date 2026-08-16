@@ -23,6 +23,15 @@ Environment=ASPNETCORE_ENVIRONMENT=Production
 # 0.0.0.0を指定することで、localhostだけでなく外部PCからもアクセス可能にする
 Environment=ASPNETCORE_URLS=http://0.0.0.0:8080
 
+# Management Hostから接続するManagement APIのURL
+# .NET Configurationでは「:」を「__」で表現する
+Environment=ManagementApi__BaseUrl=http://127.0.0.1:8081/
+#
+# Management APIを使用しない場合は、
+# 実在しないURLを設定してManagement Hostのみ起動可能にします。
+# Camera TestなどAPI依存機能を実行した場合は接続エラーになります。
+Environment=ManagementApi__BaseUrl=http://management-api-disabled/
+
 # Management Hostが異常終了した場合は自動再起動する
 Restart=always
 

@@ -8,6 +8,7 @@ After=linux-edge-inspection-inspection-worker.service
 # Inspection Workerを関連サービスとして起動対象に含めます。
 Wants=linux-edge-inspection-inspection-worker.service
 
+
 [Service]
 Type=simple
 
@@ -18,9 +19,10 @@ WorkingDirectory=/opt/linux-edge-inspection-management-api
 # ASP.NET Coreの本番環境用設定を使用します。
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
-# Management APIは同一端末内からのみ利用するため、
-# loopbackアドレスで待ち受けます。
-Environment=ASPNETCORE_URLS=http://127.0.0.1:8081
+# Linux上では8081番ポートで待ち受けます。
+# 0.0.0.0を指定することで、localhostだけでなく
+# 外部PCからもManagement APIへアクセス可能にします。
+Environment=ASPNETCORE_URLS=http://0.0.0.0:8081
 
 # Inspection Workerとの接続先Unix Domain Socketです。
 Environment=InspectionWorkerClient__SocketPath=/run/linux-edge-inspection/inspection-worker.sock
@@ -36,6 +38,7 @@ Restart=on-failure
 
 # 再起動前に5秒待機します。
 RestartSec=5
+
 
 [Install]
 WantedBy=multi-user.target
