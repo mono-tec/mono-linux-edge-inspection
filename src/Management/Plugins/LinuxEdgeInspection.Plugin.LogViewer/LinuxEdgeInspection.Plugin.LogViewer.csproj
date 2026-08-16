@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Product>Linux Edge Inspection Platform</Product>
+    <Description>Log Viewer plugin for Linux Edge Inspection.</Description>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\LinuxEdgeInspection.Management.Abstractions\LinuxEdgeInspection.Management.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

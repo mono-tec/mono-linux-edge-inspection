@@ -1,0 +1,54 @@
+@page "/"
+@using LinuxEdgeInspection.Management.Core
+@inject PluginRegistry PluginRegistry
+
+<PageTitle>Dashboard | Linux Edge Inspection Platform</PageTitle>
+
+<div class="page-heading dashboard-heading">
+    <div>
+        <p class="eyebrow">EDGE MANAGEMENT</p>
+        <h1>Dashboard</h1>
+        <p class="page-description">Linux Edge Inspection Platform status and management tools.</p>
+    </div>
+    <span class="platform-status"><span class="status-dot"></span> Management Online</span>
+</div>
+
+<section class="summary-grid" aria-label="Platform summary">
+    <div class="summary-card">
+        <span class="summary-label">Platform</span>
+        <strong>Linux Edge Inspection</strong>
+        <span class="summary-detail">Management Host</span>
+    </div>
+    <div class="summary-card">
+        <span class="summary-label">Plugins</span>
+        <strong>@PluginRegistry.Plugins.Count</strong>
+        <span class="summary-detail">Loaded and available</span>
+    </div>
+    <div class="summary-card">
+        <span class="summary-label">Inspection Link</span>
+        <strong>Not Connected</strong>
+        <span class="summary-detail">Worker integration is not configured</span>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">TOOLS</p>
+            <h2>Management Plugins</h2>
+        </div>
+    </div>
+    <div class="plugin-grid">
+        @foreach (var plugin in PluginRegistry.Plugins)
+        {
+            <a class="plugin-card" href="@plugin.Manifest.Route">
+                <span class="plugin-card-icon">@((MarkupString)Components.Icons.PluginIconRenderer.GetSvg(plugin.Manifest.Icon))</span>
+                <span>
+                    <strong>@plugin.Manifest.Name</strong>
+                    <small>@plugin.Manifest.Description</small>
+                </span>
+                <span class="plugin-arrow" aria-hidden="true">→</span>
+            </a>
+        }
+    </div>
+</section>

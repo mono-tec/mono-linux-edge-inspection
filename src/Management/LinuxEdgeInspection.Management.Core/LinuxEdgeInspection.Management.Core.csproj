@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Product>Linux Edge Inspection Platform</Product>
+    <Description>Plugin registration services for the Linux Edge Inspection management UI.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LinuxEdgeInspection.Management.Abstractions\LinuxEdgeInspection.Management.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

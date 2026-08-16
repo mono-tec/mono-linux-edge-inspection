@@ -1,0 +1,82 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    background: var(--lei-background);
+}
+
+.sidebar {
+    width: 270px;
+    flex: 0 0 270px;
+    background: linear-gradient(180deg, var(--lei-sidebar) 0%, var(--lei-sidebar-deep) 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+main {
+    min-width: 0;
+    flex: 1;
+}
+
+.topbar {
+    height: 64px;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--lei-text-muted);
+    background: var(--lei-surface);
+    border-bottom: 1px solid var(--lei-border);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+}
+
+.environment-label {
+    color: var(--lei-accent-dark);
+    font-weight: 700;
+}
+
+.content {
+    max-width: 1320px;
+    padding: 2.5rem;
+}
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    right: 1rem;
+    bottom: 1rem;
+    padding: 1rem 3rem 1rem 1rem;
+    color: white;
+    background: var(--lei-danger);
+    border-radius: 8px;
+    box-shadow: var(--lei-shadow);
+}
+
+#blazor-error-ui .reload {
+    color: white;
+    font-weight: 700;
+}
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    right: 1rem;
+    cursor: pointer;
+}
+
+@media (max-width: 760px) {
+    .page {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .topbar {
+        display: none;
+    }
+
+    .content {
+        padding: 1.5rem 1rem;
+    }
+}

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <Product>Linux Edge Inspection Platform</Product>
+    <Description>Blazor management host for Linux Edge Inspection.</Description>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LinuxEdgeInspection.Management.Abstractions\LinuxEdgeInspection.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\LinuxEdgeInspection.Management.Core\LinuxEdgeInspection.Management.Core.csproj" />
+    <ProjectReference Include="..\Plugins\LinuxEdgeInspection.Plugin.DiskMonitor\LinuxEdgeInspection.Plugin.DiskMonitor.csproj" />
+    <ProjectReference Include="..\Plugins\LinuxEdgeInspection.Plugin.CameraTest\LinuxEdgeInspection.Plugin.CameraTest.csproj" />
+    <ProjectReference Include="..\Plugins\LinuxEdgeInspection.Plugin.LogViewer\LinuxEdgeInspection.Plugin.LogViewer.csproj" />
+  </ItemGroup>
+</Project>

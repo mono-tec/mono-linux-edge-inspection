@@ -1,0 +1,50 @@
+@page "/plugins/camera-test"
+@inject ICameraTestService CameraTestService
+
+<PageTitle>Camera Test | Linux Edge Inspection Platform</PageTitle>
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">INSPECTION DIAGNOSTICS</p>
+        <h1>Camera Test</h1>
+        <p class="page-description">Run a test inspection and review each processing stage.</p>
+    </div>
+    <button class="button button-primary" @onclick="RunTestAsync" disabled="@_isRunning">
+        @(_isRunning ? "Running..." : "Run Camera Test")
+    </button>
+</div>
+
+@if (_result is null)
+{
+    <div class="empty-state">Select <strong>Run Camera Test</strong> to execute the dummy inspection.</div>
+}
+else
+{
+    <div class="result-grid">
+        <ResultItem Name="Capture" Value="@_result.Capture" />
+        <ResultItem Name="Preprocess" Value="@_result.Preprocess" />
+        <ResultItem Name="Analysis" Value="@_result.Analysis" />
+        <ResultItem Name="Judgement" Value="@_result.Judgement" Highlight="true" />
+        <ResultItem Name="Label" Value="@_result.Label" />
+        <ResultItem Name="Error" Value="@(_result.Error ?? "None")" />
+    </div>
+}
+
+@code {
+    private CameraTestResult? _result;
+    private bool _isRunning;
+
+    private async Task RunTestAsync()
+    {
+        _isRunning = true;
+
+        try
+        {
+            _result = await CameraTestService.RunAsync();
+        }
+        finally
+        {
+            _isRunning = false;
+        }
+    }
+}

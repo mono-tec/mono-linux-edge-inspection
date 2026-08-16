@@ -1,0 +1,35 @@
+@using LinuxEdgeInspection.Management.Abstractions
+@using LinuxEdgeInspection.Management.Core
+@using LinuxEdgeInspection.Management.Components.Icons
+@inject PluginRegistry PluginRegistry
+
+<div class="brand-row">
+    <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" role="img"><path d="M5 7h22v18H5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 12h12M10 16h8M10 20h12" stroke="currentColor" stroke-width="2"/></svg>
+    </span>
+    <a class="brand-name" href="/">
+        <strong>Linux Edge</strong>
+        <small>Inspection Platform</small>
+    </a>
+</div>
+
+<input type="checkbox" title="Toggle navigation" class="nav-toggle" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.nav-toggle').click()">
+    <nav aria-label="Primary navigation">
+        <p class="nav-section">OVERVIEW</p>
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <span class="nav-icon">@((MarkupString)PluginIconRenderer.DashboardSvg)</span>
+            Dashboard
+        </NavLink>
+
+        <p class="nav-section plugin-section">PLUGINS</p>
+        @foreach (var plugin in PluginRegistry.Plugins)
+        {
+            <NavLink class="nav-link" href="@plugin.Manifest.Route">
+                <span class="nav-icon">@((MarkupString)PluginIconRenderer.GetSvg(plugin.Manifest.Icon))</span>
+                @plugin.Manifest.Name
+            </NavLink>
+        }
+    </nav>
+</div>

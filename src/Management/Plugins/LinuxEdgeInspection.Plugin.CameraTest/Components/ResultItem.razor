@@ -1,0 +1,18 @@
+<div class="result-card @(_highlight ? "result-highlight" : null)">
+    <span class="result-name">@Name</span>
+    <span class="status-dot" aria-hidden="true"></span>
+    <strong class="result-value">@Value</strong>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Highlight { get; set; }
+
+    private bool _highlight => Highlight;
+}

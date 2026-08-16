@@ -1,0 +1,17 @@
+:root {
+    --lei-sidebar: #18394c;
+    --lei-sidebar-deep: #102b3b;
+    --lei-accent: #3ca9a3;
+    --lei-accent-dark: #167c78;
+    --lei-accent-soft: #7fd0ca;
+    --lei-background: #f3f6f7;
+    --lei-surface: #ffffff;
+    --lei-surface-muted: #f7f9fa;
+    --lei-border: #dce4e7;
+    --lei-text: #172b36;
+    --lei-text-muted: #647782;
+    --lei-success: #278767;
+    --lei-warning: #bd7c22;
+    --lei-danger: #b94a48;
+    --lei-shadow: 0 8px 24px rgba(20, 48, 62, 0.08);
+}

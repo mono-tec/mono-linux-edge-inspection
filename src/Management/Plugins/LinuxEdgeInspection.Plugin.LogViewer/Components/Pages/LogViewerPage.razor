@@ -1,0 +1,45 @@
+@page "/plugins/log-viewer"
+@inject ILogViewerService LogViewerService
+
+<PageTitle>Log Viewer | Linux Edge Inspection Platform</PageTitle>
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">PLATFORM ACTIVITY</p>
+        <h1>Log Viewer</h1>
+        <p class="page-description">Recent platform events provided by the configured log service.</p>
+    </div>
+    <button class="button button-secondary" @onclick="LoadLogsAsync">Refresh</button>
+</div>
+
+<div class="table-shell">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Level</th>
+                <th>Component</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in _entries)
+            {
+                <tr>
+                    <td class="timestamp">@entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss zzz")</td>
+                    <td><span class="level level-@entry.Level.ToLowerInvariant()">@entry.Level</span></td>
+                    <td class="primary-cell">@entry.Component</td>
+                    <td>@entry.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private IReadOnlyList<LogEntry> _entries = [];
+
+    protected override async Task OnInitializedAsync() => await LoadLogsAsync();
+
+    private async Task LoadLogsAsync() => _entries = await LogViewerService.GetLogsAsync();
+}

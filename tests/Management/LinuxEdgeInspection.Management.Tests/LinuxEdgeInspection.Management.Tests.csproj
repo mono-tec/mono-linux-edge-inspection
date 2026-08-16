@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Management\LinuxEdgeInspection.Management.Abstractions\LinuxEdgeInspection.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\src\Management\LinuxEdgeInspection.Management.Core\LinuxEdgeInspection.Management.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Management\LinuxEdgeInspection.Management\LinuxEdgeInspection.Management.csproj" />
+    <ProjectReference Include="..\..\..\src\Management\Plugins\LinuxEdgeInspection.Plugin.CameraTest\LinuxEdgeInspection.Plugin.CameraTest.csproj" />
+    <ProjectReference Include="..\..\..\src\Management\Plugins\LinuxEdgeInspection.Plugin.DiskMonitor\LinuxEdgeInspection.Plugin.DiskMonitor.csproj" />
+    <ProjectReference Include="..\..\..\src\Management\Plugins\LinuxEdgeInspection.Plugin.LogViewer\LinuxEdgeInspection.Plugin.LogViewer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

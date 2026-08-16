@@ -1,0 +1,23 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <aside class="sidebar">
+        <NavMenu />
+    </aside>
+
+    <main>
+        <header class="topbar">
+            <span>Management Console</span>
+            <span class="environment-label">Edge Node</span>
+        </header>
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    The management connection encountered an error.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">×</span>
+</div>
