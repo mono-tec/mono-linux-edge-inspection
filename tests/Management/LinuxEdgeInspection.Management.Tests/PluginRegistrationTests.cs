@@ -44,7 +44,7 @@ public sealed class PluginRegistrationTests
     }
 
     [Fact]
-    public void AddLogViewerPlugin_RegistersJournaldLogViewerService()
+    public void AddLogViewerPlugin_RegistersLogViewerService()
     {
         var services = new ServiceCollection();
 
@@ -52,7 +52,7 @@ public sealed class PluginRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        Assert.IsType<JournaldLogViewerService>(
+        Assert.IsType<DummyLogViewerService>(
             provider.GetRequiredService<ILogViewerService>());
     }
 }
