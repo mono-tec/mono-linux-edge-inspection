@@ -30,7 +30,7 @@ Environment=ManagementApi__BaseUrl=http://127.0.0.1:8081/
 # Management APIを使用しない場合は、
 # 実在しないURLを設定してManagement Hostのみ起動可能にします。
 # Camera TestなどAPI依存機能を実行した場合は接続エラーになります。
-Environment=ManagementApi__BaseUrl=http://management-api-disabled/
+#Environment=ManagementApi__BaseUrl=http://management-api-disabled/
 
 # Management Hostが異常終了した場合は自動再起動する
 Restart=always

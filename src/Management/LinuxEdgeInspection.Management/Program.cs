@@ -46,6 +46,10 @@ if (OperatingSystem.IsLinux())
     // Linuxではjournaldを参照する実装へ差し替えます。
     builder.Services.RemoveAll<ILogViewerService>();
 
+    // journalctl実行時の引数を組み立てるサービスを登録します。
+    builder.Services.AddSingleton<JournalctlArgumentsBuilder>();
+
+    // Linuxではjournaldを参照する実装を使用します。
     builder.Services.AddSingleton<
         ILogViewerService,
         JournaldLogViewerService>();
