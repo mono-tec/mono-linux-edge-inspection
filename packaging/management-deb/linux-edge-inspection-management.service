@@ -1,0 +1,35 @@
+[Unit]
+# systemd上で表示されるサービス名称
+Description=Linux Edge Inspection Management
+
+# ネットワーク初期化後に起動する
+After=network.target
+
+
+[Service]
+# 常駐プロセスとして起動する
+Type=simple
+
+# Blazor Management Hostの配置先
+WorkingDirectory=/opt/linux-edge-inspection-management
+
+# Management Hostを.NET Runtimeで起動する
+ExecStart=/usr/bin/dotnet /opt/linux-edge-inspection-management/LinuxEdgeInspection.Management.dll
+
+# ASP.NET CoreをProduction環境として起動する
+Environment=ASPNETCORE_ENVIRONMENT=Production
+
+# Linux上では8080番ポートで待ち受ける
+# 0.0.0.0を指定することで、localhostだけでなく外部PCからもアクセス可能にする
+Environment=ASPNETCORE_URLS=http://0.0.0.0:8080
+
+# Management Hostが異常終了した場合は自動再起動する
+Restart=always
+
+# 再起動まで5秒待機する
+RestartSec=5
+
+
+[Install]
+# OS起動時の通常サービスとして有効化できるようにする
+WantedBy=multi-user.target

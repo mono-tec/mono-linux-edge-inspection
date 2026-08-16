@@ -453,6 +453,126 @@ jobs:
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-inspection-worker" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-inspection-worker" \
           ./packaging/inspection-worker-deb/build-deb.sh
+          
+      # ============================================================
+      # LinuxEdgeInspection.Management
+      # ============================================================
+
+      # linux-x64向けpublishに必要な依存関係を復元します。
+      - name: Restore Management dependencies
+        run: >
+          dotnet restore
+          src/Management/LinuxEdgeInspection.Management/LinuxEdgeInspection.Management.csproj
+          --runtime linux-x64
+
+      # LinuxEdgeInspection.Managementを
+      # linux-x64向けにpublishします。
+      #
+      # framework-dependent構成のため、実機には
+      # ASP.NET Core Runtime 10が必要です。
+      - name: Publish Management
+        run: >
+          dotnet publish
+          src/Management/LinuxEdgeInspection.Management/LinuxEdgeInspection.Management.csproj
+          --configuration Release
+          --runtime linux-x64
+          --self-contained false
+          --no-restore
+          --output artifacts/publish/linux-edge-inspection-management
+          -p:Version=${{ env.VERSION }}
+          -p:SourceRevisionId=${{ github.sha }}
+          -p:ContinuousIntegrationBuild=true
+
+      # 配布不要な開発用ファイルを削除します。
+      - name: Clean Management publish output
+        shell: bash
+        run: |
+          rm -f \
+            artifacts/publish/linux-edge-inspection-management/appsettings.Development.json
+
+          find artifacts/publish/linux-edge-inspection-management \
+            -maxdepth 1 \
+            -type f \
+            -name "*.pdb" \
+            -delete
+
+      # ManagementのSBOM出力先を作成します。
+      - name: Create Management SBOM directory
+        run: |
+          mkdir -p artifacts/sbom/management
+
+      # Managementのpublish成果物を基準にSBOMを生成します。
+      - name: Generate Management SBOM
+        shell: bash
+        run: |
+          sbom-tool generate \
+            -b "${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-management" \
+            -m "${GITHUB_WORKSPACE}/artifacts/sbom/management" \
+            -pn "LinuxEdgeInspection.Management" \
+            -pv "${VERSION}" \
+            -ps "mono-tec"
+
+      # ManagementのSBOMからOSSライセンスNoticeを生成します。
+      - name: Generate Management OSS notice
+        shell: bash
+        run: |
+          source "${RUNNER_TEMP}/onot-venv/bin/activate"
+
+          rm -rf artifacts/license/linux-edge-inspection-management
+          mkdir -p artifacts/license/linux-edge-inspection-management
+
+          onot generate \
+            -i artifacts/sbom/management/_manifest/spdx_2.2/manifest.spdx.json \
+            -f markdown \
+            --output-dir artifacts/license/linux-edge-inspection-management
+
+      # Managementのライセンス関連ファイルを
+      # Debianパッケージへ格納しやすい形へ整理します。
+      - name: Prepare Management compliance files
+        shell: bash
+        run: |
+          COMPLIANCE_DIR="artifacts/compliance/linux-edge-inspection-management"
+
+          rm -rf "${COMPLIANCE_DIR}"
+          mkdir -p "${COMPLIANCE_DIR}"
+
+          cp LICENSE "${COMPLIANCE_DIR}/LICENSE"
+
+          NOTICE_FILE="$(find \
+            artifacts/license/linux-edge-inspection-management \
+            -maxdepth 1 \
+            -type f \
+            -name "*.md" \
+            | head -n 1)"
+
+          if [[ -z "${NOTICE_FILE}" ]]; then
+            echo "Management OSS Notice file was not generated."
+            exit 1
+          fi
+
+          cp \
+            "${NOTICE_FILE}" \
+            "${COMPLIANCE_DIR}/THIRD-PARTY-NOTICES.md"
+
+          cp \
+            artifacts/sbom/management/_manifest/spdx_2.2/manifest.spdx.json \
+            "${COMPLIANCE_DIR}/sbom.spdx.json"
+
+          echo "Management compliance files:"
+          find "${COMPLIANCE_DIR}" -maxdepth 1 -type f -print
+
+      # publish成果物からManagement用debパッケージを作成します。
+      - name: Create Management Debian package
+        shell: bash
+        run: |
+          chmod +x packaging/management-deb/build-deb.sh
+
+          PACKAGE_VERSION="${VERSION}" \
+          PACKAGE_ARCHITECTURE="amd64" \
+          RUNTIME_IDENTIFIER="linux-x64" \
+          PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-management" \
+          COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-management" \
+          ./packaging/management-deb/build-deb.sh
 
       # ============================================================
       # 生成結果の確認
@@ -472,6 +592,10 @@ jobs:
 
           dpkg-deb --info \
             "artifacts/packages/linux-edge-inspection-inspection-worker_${VERSION}_amd64.deb"
+          
+          dpkg-deb --info \
+            "artifacts/packages/linux-edge-inspection-management_${VERSION}_amd64.deb"
+
 
       # deb内部に意図したファイルが配置されていることを確認します。
       - name: Inspect Debian package contents
@@ -485,6 +609,9 @@ jobs:
 
           dpkg-deb --contents \
             "artifacts/packages/linux-edge-inspection-inspection-worker_${VERSION}_amd64.deb"
+
+          dpkg-deb --contents \
+            "artifacts/packages/linux-edge-inspection-management_${VERSION}_amd64.deb"
 
       # SBOM生成結果を確認します。
       - name: Inspect generated SBOMs
@@ -503,7 +630,7 @@ jobs:
       # ============================================================
 
       # Actionsの実行結果からダウンロードできるように、
-      # debパッケージをWorkflow Artifactへ登録します。
+      # 4つのdebパッケージをWorkflow Artifactへ登録します。
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -512,11 +639,12 @@ jobs:
             artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-inspection-worker_${{ env.VERSION }}_amd64.deb
+            artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_amd64.deb
           if-no-files-found: error
           retention-days: 14
 
       # タグに対応するGitHub Releaseを作成し、
-      # 3つのdebパッケージとSBOMを添付します。
+      # 4つのdebパッケージを添付します。
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
@@ -524,4 +652,5 @@ jobs:
             artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-inspection-worker_${{ env.VERSION }}_amd64.deb
+            artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_amd64.deb
           generate_release_notes: true
