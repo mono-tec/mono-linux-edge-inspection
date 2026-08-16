@@ -4,12 +4,14 @@
 #
 # 対象パッケージ:
 # - linux-edge-inspection-management
+# - linux-edge-inspection-management-api
 # - linux-edge-inspection-inspection-worker
 # - linux-edge-inspection-capture-request-listener
 # - linux-edge-inspection-runtime
 #
 # アンインストール順は依存関係や利用関係を考慮し、
-# Management → Inspection Worker → Capture Request Listener → Runtime
+# Management → Management API → Inspection Worker
+# → Capture Request Listener → Runtime
 # とします。
 
 set -euo pipefail
@@ -19,6 +21,7 @@ set -euo pipefail
 # ------------------------------------------------------------
 
 MANAGEMENT_PACKAGE="linux-edge-inspection-management"
+MANAGEMENT_API_PACKAGE="linux-edge-inspection-management-api"
 WORKER_PACKAGE="linux-edge-inspection-inspection-worker"
 LISTENER_PACKAGE="linux-edge-inspection-capture-request-listener"
 RUNTIME_PACKAGE="linux-edge-inspection-runtime"
@@ -32,6 +35,11 @@ echo "Stopping Linux Edge Inspection services..."
 # Management UIを停止します。
 sudo systemctl stop \
   linux-edge-inspection-management.service \
+  2>/dev/null || true
+
+# Management APIを停止します。
+sudo systemctl stop \
+  linux-edge-inspection-management-api.service \
   2>/dev/null || true
 
 # Inspection Workerを停止します。
@@ -56,9 +64,10 @@ sudo systemctl stop \
 echo
 echo "Removing Linux Edge Inspection packages..."
 
-# 上位側のManagement / Workerから順に指定します。
+# 上位側のManagement / Management API / Workerから順に指定します。
 sudo apt-get remove -y \
   "${MANAGEMENT_PACKAGE}" \
+  "${MANAGEMENT_API_PACKAGE}" \
   "${WORKER_PACKAGE}" \
   "${LISTENER_PACKAGE}" \
   "${RUNTIME_PACKAGE}"

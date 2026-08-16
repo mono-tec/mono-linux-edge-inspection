@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 # Linux Edge Inspectionの最新GitHub Releaseを取得し、
-# 4つのDebian Packageをまとめてダウンロード・インストールします。
+# 5つのDebian Packageをまとめてダウンロード・インストールします。
 #
 # 対象パッケージ:
 # - linux-edge-inspection-runtime
 # - linux-edge-inspection-capture-request-listener
 # - linux-edge-inspection-inspection-worker
 # - linux-edge-inspection-management
+# - linux-edge-inspection-management-api
 
 set -euo pipefail
 
@@ -87,6 +88,8 @@ WORKER_PACKAGE="linux-edge-inspection-inspection-worker_${PACKAGE_VERSION}_${ARC
 
 MANAGEMENT_PACKAGE="linux-edge-inspection-management_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
 
+MANAGEMENT_API_PACKAGE="linux-edge-inspection-management-api_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
+
 DOWNLOAD_BASE_URL="${GITHUB_RELEASE_BASE_URL}/download/${LATEST_TAG}"
 
 # ------------------------------------------------------------
@@ -108,6 +111,7 @@ download_package "${RUNTIME_PACKAGE}"
 download_package "${LISTENER_PACKAGE}"
 download_package "${WORKER_PACKAGE}"
 download_package "${MANAGEMENT_PACKAGE}"
+download_package "${MANAGEMENT_API_PACKAGE}"
 
 echo
 echo "Downloaded packages:"
@@ -116,7 +120,8 @@ ls -lh \
   "${RUNTIME_PACKAGE}" \
   "${LISTENER_PACKAGE}" \
   "${WORKER_PACKAGE}" \
-  "${MANAGEMENT_PACKAGE}"
+  "${MANAGEMENT_PACKAGE}" \
+  "${MANAGEMENT_API_PACKAGE}"
 
 # ------------------------------------------------------------
 # Debian Packageをまとめてインストール
@@ -125,7 +130,7 @@ ls -lh \
 echo
 echo "Installing Linux Edge Inspection packages..."
 
-# 4つを同時にaptへ渡すことで、
+# 5つを同時にaptへ渡すことで、
 # ローカルdeb同士の依存関係と.NET Runtime依存を
 # aptにまとめて解決させます。
 sudo apt-get update
@@ -134,7 +139,8 @@ sudo apt-get install -y \
   "./${RUNTIME_PACKAGE}" \
   "./${LISTENER_PACKAGE}" \
   "./${WORKER_PACKAGE}" \
-  "./${MANAGEMENT_PACKAGE}"
+  "./${MANAGEMENT_PACKAGE}" \
+  "./${MANAGEMENT_API_PACKAGE}"
 
 # ------------------------------------------------------------
 # インストール結果の確認
@@ -162,8 +168,13 @@ echo
 echo "Example:"
 echo "  sudo systemctl start linux-edge-inspection-capture-request-listener.service"
 echo "  sudo systemctl start linux-edge-inspection-inspection-worker.service"
+echo "  sudo systemctl start linux-edge-inspection-management-api.service"
 echo "  sudo systemctl start linux-edge-inspection-management.service"
 
 echo
 echo "Management UI:"
 echo "  http://<server-ip>:8080"
+
+echo
+echo "Management API:"
+echo "  http://<server-ip>:8081"

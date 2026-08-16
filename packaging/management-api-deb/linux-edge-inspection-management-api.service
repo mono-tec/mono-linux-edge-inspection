@@ -1,0 +1,41 @@
+[Unit]
+Description=Linux Edge Inspection Management API
+
+# Inspection WorkerのUnix Domain Socketへ接続するため、
+# Inspection Workerより後に起動します。
+After=linux-edge-inspection-inspection-worker.service
+
+# Inspection Workerを関連サービスとして起動対象に含めます。
+Wants=linux-edge-inspection-inspection-worker.service
+
+[Service]
+Type=simple
+
+# appsettings.jsonを読み込むため、
+# アプリケーション配置先を作業ディレクトリにします。
+WorkingDirectory=/opt/linux-edge-inspection-management-api
+
+# ASP.NET Coreの本番環境用設定を使用します。
+Environment=ASPNETCORE_ENVIRONMENT=Production
+
+# Management APIは同一端末内からのみ利用するため、
+# loopbackアドレスで待ち受けます。
+Environment=ASPNETCORE_URLS=http://127.0.0.1:8081
+
+# Inspection Workerとの接続先Unix Domain Socketです。
+Environment=InspectionWorkerClient__SocketPath=/run/linux-edge-inspection/inspection-worker.sock
+
+# Runtimeが保存した撮像画像の参照先です。
+Environment=CaptureImages__RootDirectory=/var/lib/linux-edge-inspection-runtime/captures
+
+# Management APIを常駐プロセスとして実行します。
+ExecStart=/usr/bin/linux-edge-inspection-management-api
+
+# 異常終了した場合のみ再起動します。
+Restart=on-failure
+
+# 再起動前に5秒待機します。
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

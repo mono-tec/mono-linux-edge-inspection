@@ -12,6 +12,11 @@
     <File Path="packaging/inspection-worker-deb/build-deb.sh" />
     <File Path="packaging/inspection-worker-deb/linux-edge-inspection-inspection-worker.service" />
   </Folder>
+  <Folder Name="/packaging/management-api-deb/">
+    <File Path="packaging/management-api-deb/build-deb.sh" />
+    <File Path="packaging/management-api-deb/linux-edge-inspection-management-api.service" />
+  </Folder>
+  <Folder Name="/packaging/management-deb/" />
   <Folder Name="/packaging/runtime-deb/">
     <File Path="packaging/runtime-deb/build-deb.sh" />
     <File Path="packaging/runtime-deb/linux-edge-inspection-runtime.service" />
