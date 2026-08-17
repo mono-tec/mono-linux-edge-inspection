@@ -236,6 +236,11 @@ cat > "${WORK_DIR}/DEBIAN/postrm" <<'POSTRM'
 #!/usr/bin/env bash
 set -e
 
+# Inspection Workerが使用したUnix Domain Socketが
+# 残っている場合は削除します。
+rm -f \
+  /run/linux-edge-inspection/inspection-worker.sock
+
 systemctl daemon-reload || true
 
 exit 0

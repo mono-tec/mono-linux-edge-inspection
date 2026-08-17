@@ -13,22 +13,6 @@ Console.WriteLine(
     $"Environment: {builder.Environment.EnvironmentName}");
 
 //
-// Capture Runtime起動設定
-//
-// appsettings.jsonのCaptureRuntimeLauncherセクションを読み込みます。
-// systemctlのパス、起動対象のsystemd Unit名、
-// Runtime起動処理のタイムアウト時間を保持します。
-//
-builder.Services.Configure<
-    CaptureRuntimeLauncherOptions>(
-    builder.Configuration.GetRequiredSection(
-        "CaptureRuntimeLauncher"));
-
-builder.Services.Configure<CaptureRequestEndpointOptions>(
-    builder.Configuration.GetRequiredSection(
-        CaptureRequestEndpointOptions.SectionName));
-
-//
 // Capture Request Queue
 //
 // CaptureRequestListenerが処理する撮影要求を
@@ -54,97 +38,6 @@ builder.Services.AddSingleton<
     CaptureRequestQueue>();
 
 //
-// 外部システムコマンド実行サービス
-//
-// systemctlなどの外部コマンドを起動し、
-// 以下の実行結果を取得します。
-//
-// ・終了コード
-// ・標準出力
-// ・標準エラー
-// ・タイムアウト
-// ・キャンセル
-//
-builder.Services.AddSingleton<
-    ISystemCommandRunner,
-    SystemCommandRunner>();
-
-
-//
-// Capture Runtime結果読込サービス
-//
-// Runtimeが出力したcapture-result.jsonを読み込みます。
-//
-builder.Services.AddSingleton<ICaptureRuntimeResultReader>(
-    serviceProvider =>
-    {
-        var options =
-            serviceProvider.GetRequiredService<
-                IOptions<CaptureRuntimeLauncherOptions>>()
-                .Value;
-
-        return new CaptureRuntimeResultReader(
-            options.ResultFilePath);
-    });
-
-
-//
-// Capture Runtime起動サービス
-//
-// systemctl restartを使用して、
-// Capture Runtimeのsystemd Unitを1回起動します。
-//
-// 起動対象のUnit名やsystemctlのパスは、
-// CaptureRuntimeLauncherOptionsから取得します。
-//
-// OptionsとISystemCommandRunnerを使用して
-// SystemdCaptureRuntimeLauncherを生成するため、
-// Factory形式でDI登録します。
-//
-builder.Services.AddSingleton<ICaptureRuntimeLauncher>(
-    serviceProvider =>
-    {
-        var commandRunner =
-            serviceProvider.GetRequiredService<
-                ISystemCommandRunner>();
-
-        var resultReader =
-            serviceProvider.GetRequiredService<
-                ICaptureRuntimeResultReader>();
-
-        var options =
-            serviceProvider.GetRequiredService<
-                IOptions<CaptureRuntimeLauncherOptions>>()
-                .Value;
-
-        return new SystemdCaptureRuntimeLauncher(
-            commandRunner,
-            resultReader,
-            options.SystemctlPath,
-            options.ServiceName,
-            TimeSpan.FromSeconds(
-                options.TimeoutSeconds));
-    });
-
-//
-// Capture Request処理サービス
-//
-// Queueから取り出されたCapture Requestを
-// 1件ずつ処理します。
-//
-// 処理内容:
-// 1. Capture Runtimeを起動
-// 2. Runtime起動結果をCaptureResultへ変換
-// 3. CaptureResultを呼び出し元へ返却
-//
-// CaptureResultはUnix Domain Socketを介して
-// Inspection Workerへ返却されます.
-//
-builder.Services.AddSingleton<
-    ICaptureRequestProcessor,
-    CaptureRequestProcessor>();
-
-//
 // Capture Request処理Worker
 //
 // CaptureRequestQueueを常時監視し、
@@ -156,8 +49,137 @@ builder.Services.AddSingleton<
 builder.Services.AddHostedService<
     CaptureRequestWorker>();
 
-builder.Services.AddHostedService<
-    UnixDomainSocketCaptureRequestServer>();
+//
+// Linux環境でのみ使用するサービスを登録します。
+//
+// Capture Runtimeはsystemdから起動し、
+// Inspection WorkerとはUnix Domain Socketで通信します。
+//
+if (OperatingSystem.IsLinux())
+{
+    //
+    // Capture Runtime起動設定
+    //
+    // appsettings.jsonのCaptureRuntimeLauncherセクションを読み込みます。
+    // systemctlのパス、起動対象のsystemd Unit名、
+    // Runtime起動処理のタイムアウト時間を保持します。
+    //
+    builder.Services.Configure<
+        CaptureRuntimeLauncherOptions>(
+        builder.Configuration.GetRequiredSection(
+            "CaptureRuntimeLauncher"));
+
+    //
+    // Capture Request受信設定
+    //
+    // Inspection WorkerからCapture Requestを受信する
+    // Unix Domain Socketの設定を読み込みます。
+    //
+    builder.Services.Configure<
+        CaptureRequestEndpointOptions>(
+        builder.Configuration.GetRequiredSection(
+            CaptureRequestEndpointOptions.SectionName));
+
+    //
+    // 外部システムコマンド実行サービス
+    //
+    // systemctlなどの外部コマンドを起動し、
+    // 以下の実行結果を取得します。
+    //
+    // ・終了コード
+    // ・標準出力
+    // ・標準エラー
+    // ・タイムアウト
+    // ・キャンセル
+    //
+    builder.Services.AddSingleton<
+        ISystemCommandRunner,
+        SystemCommandRunner>();
+
+    //
+    // Capture Runtime結果読込サービス
+    //
+    // Runtimeが出力したcapture-result.jsonを読み込みます。
+    //
+    builder.Services.AddSingleton<
+        ICaptureRuntimeResultReader>(
+        serviceProvider =>
+        {
+            var options =
+                serviceProvider.GetRequiredService<
+                    IOptions<CaptureRuntimeLauncherOptions>>()
+                    .Value;
+
+            return new CaptureRuntimeResultReader(
+                options.ResultFilePath);
+        });
+
+    //
+    // Capture Runtime起動サービス
+    //
+    // systemctl restartを使用して、
+    // Capture Runtimeのsystemd Unitを1回起動します。
+    //
+    // 起動対象のUnit名やsystemctlのパスは、
+    // CaptureRuntimeLauncherOptionsから取得します。
+    //
+    // OptionsとISystemCommandRunnerを使用して
+    // SystemdCaptureRuntimeLauncherを生成するため、
+    // Factory形式でDI登録します。
+    //
+    builder.Services.AddSingleton<
+        ICaptureRuntimeLauncher>(
+        serviceProvider =>
+        {
+            var commandRunner =
+                serviceProvider.GetRequiredService<
+                    ISystemCommandRunner>();
+
+            var resultReader =
+                serviceProvider.GetRequiredService<
+                    ICaptureRuntimeResultReader>();
+
+            var options =
+                serviceProvider.GetRequiredService<
+                    IOptions<CaptureRuntimeLauncherOptions>>()
+                    .Value;
+
+            return new SystemdCaptureRuntimeLauncher(
+                commandRunner,
+                resultReader,
+                options.SystemctlPath,
+                options.ServiceName,
+                TimeSpan.FromSeconds(
+                    options.TimeoutSeconds));
+        });
+
+    //
+    // Capture Request処理サービス
+    //
+    // Queueから取り出されたCapture Requestを
+    // 1件ずつ処理します。
+    //
+    // 処理内容:
+    // 1. Capture Runtimeを起動
+    // 2. Runtime起動結果をCaptureResultへ変換
+    // 3. CaptureResultを呼び出し元へ返却
+    //
+    // CaptureResultはUnix Domain Socketを介して
+    // Inspection Workerへ返却されます。
+    //
+    builder.Services.AddSingleton<
+        ICaptureRequestProcessor,
+        CaptureRequestProcessor>();
+
+    //
+    // Capture Request受信Socket
+    //
+    // Inspection WorkerからのCapture Requestを
+    // Unix Domain Socketで常時受け付けます。
+    //
+    builder.Services.AddHostedService<
+        UnixDomainSocketCaptureRequestServer>();
+}
 
 //
 // Fake Capture Request生成Worker

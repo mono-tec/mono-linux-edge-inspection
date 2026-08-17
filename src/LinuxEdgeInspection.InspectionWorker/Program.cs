@@ -14,13 +14,37 @@ var builder = Host.CreateApplicationBuilder(
         ContentRootPath = AppContext.BaseDirectory
     });
 
-builder.Services.Configure<CaptureRequestClientOptions>(
-    builder.Configuration.GetRequiredSection(
-        CaptureRequestClientOptions.SectionName));
+// ------------------------------------------------------------
+// Linux環境でのみ使用するサービスを登録します。
+// ------------------------------------------------------------
 
-builder.Services.AddSingleton<
-    ICaptureRequestClient,
-    UnixDomainSocketCaptureRequestClient>();
+if (OperatingSystem.IsLinux())
+{
+    // CaptureRequestListenerへ接続するための
+    // Unix Domain Socket設定を読み込みます。
+    builder.Services.Configure<CaptureRequestClientOptions>(
+        builder.Configuration.GetRequiredSection(
+            CaptureRequestClientOptions.SectionName));
+
+    builder.Services.AddSingleton<
+        ICaptureRequestClient,
+        UnixDomainSocketCaptureRequestClient>();
+
+    // Management APIからInspection要求を受け付けるための
+    // Unix Domain Socket設定を読み込みます。
+    builder.Services.Configure<InspectionRequestEndpointOptions>(
+        builder.Configuration.GetRequiredSection(
+            InspectionRequestEndpointOptions.SectionName));
+
+    // Management APIからのInspection要求を
+    // Unix Domain Socketで常時受け付けます。
+    builder.Services.AddHostedService<
+        UnixDomainSocketInspectionRequestServer>();
+}
+
+// ------------------------------------------------------------
+// Inspection Pipelineで使用する共通サービスを登録します。
+// ------------------------------------------------------------
 
 builder.Services.AddSingleton<
     IPreprocessor,
@@ -91,12 +115,16 @@ if (args.Contains("--capture-once"))
         Console.WriteLine();
         Console.WriteLine(
             "Preprocess Result");
+
         Console.WriteLine(
             $"Succeeded    : {pipelineResult.PreprocessResult.Succeeded}");
+
         Console.WriteLine(
             $"FilePaths    : {string.Join(", ", pipelineResult.PreprocessResult.FilePaths)}");
+
         Console.WriteLine(
             $"ErrorCode    : {pipelineResult.PreprocessResult.ErrorCode}");
+
         Console.WriteLine(
             $"ErrorMessage : {pipelineResult.PreprocessResult.ErrorMessage}");
     }
@@ -106,16 +134,22 @@ if (args.Contains("--capture-once"))
         Console.WriteLine();
         Console.WriteLine(
             "Analysis Result");
+
         Console.WriteLine(
             $"Succeeded    : {pipelineResult.AnalysisResult.Succeeded}");
+
         Console.WriteLine(
             $"Judgement    : {pipelineResult.AnalysisResult.Judgement}");
+
         Console.WriteLine(
             $"Label        : {pipelineResult.AnalysisResult.Label}");
+
         Console.WriteLine(
             $"Score        : {pipelineResult.AnalysisResult.Score}");
+
         Console.WriteLine(
             $"ErrorCode    : {pipelineResult.AnalysisResult.ErrorCode}");
+
         Console.WriteLine(
             $"ErrorMessage : {pipelineResult.AnalysisResult.ErrorMessage}");
     }
@@ -133,6 +167,8 @@ if (args.Contains("--capture-once"))
 
 // Equipment Gateway実装前のため、
 // 通常起動時は自動Capture Requestを生成しません。
+// LinuxではUnixDomainSocketInspectionRequestServerが常駐し、
+// Management APIからのInspection要求を待機します。
 await host.RunAsync();
 
 return 0;

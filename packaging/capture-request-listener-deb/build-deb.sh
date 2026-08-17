@@ -234,6 +234,11 @@ cat > "${WORK_DIR}/DEBIAN/postrm" <<'POSTRM'
 #!/usr/bin/env bash
 set -e
 
+# Capture Request Listenerが使用したUnix Domain Socketが
+# 残っている場合は削除します。
+rm -f \
+  /run/linux-edge-inspection/capture-request-listener.sock
+
 systemctl daemon-reload || true
 
 exit 0
