@@ -10,6 +10,10 @@ After=network.target
 # 常駐プロセスとして起動する
 Type=simple
 
+# Linux Edge Inspection専用ユーザーで実行する
+User=linux-edge-inspection
+Group=linux-edge-inspection
+
 # Blazor Management Hostの配置先
 WorkingDirectory=/opt/linux-edge-inspection-management
 
@@ -26,11 +30,11 @@ Environment=ASPNETCORE_URLS=http://0.0.0.0:8080
 # Management Hostから接続するManagement APIのURL
 # .NET Configurationでは「:」を「__」で表現する
 Environment=ManagementApi__BaseUrl=http://127.0.0.1:8081/
-#
+
 # Management APIを使用しない場合は、
 # 実在しないURLを設定してManagement Hostのみ起動可能にします。
 # Camera TestなどAPI依存機能を実行した場合は接続エラーになります。
-#Environment=ManagementApi__BaseUrl=http://management-api-disabled/
+# Environment=ManagementApi__BaseUrl=http://management-api-disabled/
 
 # Management Hostが異常終了した場合は自動再起動する
 Restart=always

@@ -12,6 +12,10 @@ Wants=linux-edge-inspection-inspection-worker.service
 [Service]
 Type=simple
 
+# Linux Edge Inspection専用ユーザーで実行します。
+User=linux-edge-inspection
+Group=linux-edge-inspection
+
 # appsettings.jsonを読み込むため、
 # アプリケーション配置先を作業ディレクトリにします。
 WorkingDirectory=/opt/linux-edge-inspection-management-api
@@ -28,7 +32,7 @@ Environment=ASPNETCORE_URLS=http://0.0.0.0:8081
 Environment=InspectionWorkerClient__SocketPath=/run/linux-edge-inspection/inspection-worker.sock
 
 # Runtimeが保存した撮像画像の参照先です。
-Environment=CaptureImages__RootDirectory=/var/lib/linux-edge-inspection-runtime/captures
+Environment=CaptureImages__RootDirectory=/var/lib/linux-edge-inspection/captures
 
 # Management APIを常駐プロセスとして実行します。
 ExecStart=/usr/bin/linux-edge-inspection-management-api

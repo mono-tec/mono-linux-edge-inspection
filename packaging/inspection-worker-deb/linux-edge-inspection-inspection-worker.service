@@ -12,6 +12,10 @@ Wants=linux-edge-inspection-capture-request-listener.service
 [Service]
 Type=simple
 
+# Linux Edge Inspection専用ユーザーで実行します。
+User=linux-edge-inspection
+Group=linux-edge-inspection
+
 # appsettings.jsonを読み込むため、
 # アプリケーション配置先を作業ディレクトリにします。
 WorkingDirectory=/opt/linux-edge-inspection-inspection-worker
@@ -21,6 +25,10 @@ Environment=DOTNET_ENVIRONMENT=Production
 
 # Inspection Workerを常駐プロセスとして実行します。
 ExecStart=/usr/bin/linux-edge-inspection-inspection-worker
+
+# Inspection Workerが作成するUnix Domain Socketについて、
+# 同一ユーザー・グループからのみアクセス可能にします。
+UMask=0007
 
 # 異常終了した場合のみ再起動します。
 Restart=on-failure

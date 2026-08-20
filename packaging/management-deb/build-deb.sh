@@ -165,6 +165,8 @@ chmod 0755 "${WORK_DIR}/usr/bin/${PACKAGE_NAME}"
 # Debian controlファイルの作成
 # ------------------------------------------------------------
 
+# ManagementはASP.NET Core Blazorアプリケーションのため、
+# ASP.NET Core Runtimeへ依存します。
 cat > "${WORK_DIR}/DEBIAN/control" <<CONTROL
 Package: ${PACKAGE_NAME}
 Version: ${PACKAGE_VERSION}
@@ -182,14 +184,44 @@ CONTROL
 # インストール後処理の作成
 # ------------------------------------------------------------
 
-# パッケージのインストール後にsystemdのUnit定義を再読み込みします。
+# Linux Edge Inspection専用ユーザーとグループを作成し、
+# Log Viewerからjournaldを参照できるようにします。
+#
+# ユーザーとグループが既に存在する場合は再作成しません。
 #
 # サービスの自動有効化や自動起動は行わず、
 # 実機検証時に明示的に操作できるようにします。
 cat > "${WORK_DIR}/DEBIAN/postinst" <<'POSTINST'
 #!/usr/bin/env bash
-
 set -e
+
+# Linux Edge Inspection共通グループを作成します。
+if ! getent group linux-edge-inspection >/dev/null 2>&1; then
+    groupadd \
+        --system \
+        linux-edge-inspection
+fi
+
+# Linux Edge Inspection共通実行ユーザーを作成します。
+#
+# systemdサービス専用ユーザーとして使用するため、
+# Homeディレクトリは作成せず、ログインも禁止します。
+if ! id linux-edge-inspection >/dev/null 2>&1; then
+    useradd \
+        --system \
+        --gid linux-edge-inspection \
+        --no-create-home \
+        --shell /usr/sbin/nologin \
+        linux-edge-inspection
+fi
+
+# ManagementのLog Viewerからjournaldを参照できるように、
+# 専用ユーザーをsystemd-journalグループへ追加します。
+if getent group systemd-journal >/dev/null 2>&1; then
+    usermod \
+        -aG systemd-journal \
+        linux-edge-inspection
+fi
 
 systemctl daemon-reload || true
 
@@ -204,9 +236,11 @@ chmod 0755 "${WORK_DIR}/DEBIAN/postinst"
 
 # パッケージ削除前にManagementサービスを停止し、
 # 自動起動設定も解除します。
+#
+# サービスが未登録または未起動でも、
+# アンインストール処理を継続できるようにしています。
 cat > "${WORK_DIR}/DEBIAN/prerm" <<'PRERM'
 #!/usr/bin/env bash
-
 set -e
 
 systemctl stop \
@@ -227,9 +261,15 @@ chmod 0755 "${WORK_DIR}/DEBIAN/prerm"
 # ------------------------------------------------------------
 
 # Unitファイル削除後にsystemdの定義を再読み込みします。
+#
+# linux-edge-inspectionユーザーとグループは、
+# 他のLinux Edge Inspectionパッケージでも共通使用するため、
+# このパッケージの削除時には削除しません。
+#
+# systemd-journalグループへの所属についても、
+# 共通ユーザーを残すためここでは変更しません。
 cat > "${WORK_DIR}/DEBIAN/postrm" <<'POSTRM'
 #!/usr/bin/env bash
-
 set -e
 
 systemctl daemon-reload || true

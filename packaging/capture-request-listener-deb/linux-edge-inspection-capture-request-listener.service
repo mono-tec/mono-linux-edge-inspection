@@ -5,10 +5,14 @@ After=network.target
 [Service]
 Type=simple
 
+# Linux Edge Inspection専用ユーザーで実行します。
+User=linux-edge-inspection
+Group=linux-edge-inspection
+
 # Unix Domain Socketを配置する
 # /run/linux-edge-inspection をsystemdによって作成・管理します。
 RuntimeDirectory=linux-edge-inspection
-RuntimeDirectoryMode=0755
+RuntimeDirectoryMode=0770
 
 # appsettings.jsonを読み込むため、
 # アプリケーション配置先を作業ディレクトリにします。
@@ -19,6 +23,10 @@ Environment=DOTNET_ENVIRONMENT=Production
 
 # Capture Request Listenerを起動します。
 ExecStart=/usr/bin/linux-edge-inspection-capture-request-listener
+
+# 作成するSocket等について、
+# 同一ユーザー・グループからのみアクセス可能にします。
+UMask=0007
 
 # 異常終了した場合はサービスを再起動します。
 Restart=on-failure

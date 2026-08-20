@@ -186,13 +186,36 @@ CONTROL
 # インストール後処理の作成
 # ------------------------------------------------------------
 
-# パッケージのインストール後にsystemdのUnit定義を再読み込みします。
+# Linux Edge Inspection専用ユーザーとグループを作成し、
+# systemdのUnit定義を再読み込みします。
+#
+# ユーザーとグループが既に存在する場合は再作成しません。
 #
 # サービスの自動有効化や自動起動は行わず、
 # 実機検証時に明示的に操作できるようにしています。
 cat > "${WORK_DIR}/DEBIAN/postinst" <<'POSTINST'
 #!/usr/bin/env bash
 set -e
+
+# Linux Edge Inspection共通グループを作成します。
+if ! getent group linux-edge-inspection >/dev/null 2>&1; then
+  groupadd \
+    --system \
+    linux-edge-inspection
+fi
+
+# Linux Edge Inspection共通実行ユーザーを作成します。
+#
+# systemdサービス専用ユーザーとして使用するため、
+# Homeディレクトリは作成せず、ログインも禁止します。
+if ! id linux-edge-inspection >/dev/null 2>&1; then
+  useradd \
+    --system \
+    --gid linux-edge-inspection \
+    --no-create-home \
+    --shell /usr/sbin/nologin \
+    linux-edge-inspection
+fi
 
 systemctl daemon-reload || true
 
@@ -231,7 +254,13 @@ chmod 0755 "${WORK_DIR}/DEBIAN/prerm"
 # アンインストール後処理の作成
 # ------------------------------------------------------------
 
-# Unitファイル削除後にsystemdの定義を再読み込みします。
+# Unitファイル削除後に、
+# Unix Domain Socketの残骸を削除し、
+# systemdの定義を再読み込みします。
+#
+# linux-edge-inspectionユーザーとグループは、
+# 他のLinux Edge Inspectionパッケージでも共通使用するため、
+# このパッケージの削除時には削除しません。
 cat > "${WORK_DIR}/DEBIAN/postrm" <<'POSTRM'
 #!/usr/bin/env bash
 set -e

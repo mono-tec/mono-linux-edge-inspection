@@ -113,6 +113,7 @@ cp \
 # ライセンス・Notice・SBOMの配置
 # ------------------------------------------------------------
 
+# GitHub Actionsなどで生成したCompliance一式が存在することを確認します。
 for compliance_file in \
     LICENSE \
     THIRD-PARTY-NOTICES.md \
@@ -144,6 +145,9 @@ cp \
 # ------------------------------------------------------------
 
 # /usr/bin/linux-edge-inspection-management-apiを作成します。
+#
+# 利用者やsystemdからは、このコマンドを呼び出すことで
+# /opt配下の.NETアプリケーションを実行できます。
 cat > "${WORK_DIR}/usr/bin/${PACKAGE_NAME}" <<'WRAPPER'
 #!/usr/bin/env bash
 
@@ -152,6 +156,7 @@ exec /usr/bin/dotnet \
     "$@"
 WRAPPER
 
+# 実行用ラッパーへ実行権限を付与します。
 chmod 0755 "${WORK_DIR}/usr/bin/${PACKAGE_NAME}"
 
 # ------------------------------------------------------------
@@ -180,12 +185,36 @@ CONTROL
 # インストール後処理の作成
 # ------------------------------------------------------------
 
-# Unit定義を再読み込みします。
-# サービスの自動有効化・自動起動は行いません。
+# Linux Edge Inspection専用ユーザーとグループを作成し、
+# systemdのUnit定義を再読み込みします。
+#
+# ユーザーとグループが既に存在する場合は再作成しません。
+#
+# サービスの自動有効化や自動起動は行わず、
+# 実機検証時に明示的に操作できるようにしています。
 cat > "${WORK_DIR}/DEBIAN/postinst" <<'POSTINST'
 #!/usr/bin/env bash
-
 set -e
+
+# Linux Edge Inspection共通グループを作成します。
+if ! getent group linux-edge-inspection >/dev/null 2>&1; then
+    groupadd \
+        --system \
+        linux-edge-inspection
+fi
+
+# Linux Edge Inspection共通実行ユーザーを作成します。
+#
+# systemdサービス専用ユーザーとして使用するため、
+# Homeディレクトリは作成せず、ログインも禁止します。
+if ! id linux-edge-inspection >/dev/null 2>&1; then
+    useradd \
+        --system \
+        --gid linux-edge-inspection \
+        --no-create-home \
+        --shell /usr/sbin/nologin \
+        linux-edge-inspection
+fi
 
 systemctl daemon-reload || true
 
@@ -198,9 +227,13 @@ chmod 0755 "${WORK_DIR}/DEBIAN/postinst"
 # アンインストール前処理の作成
 # ------------------------------------------------------------
 
+# パッケージ削除前にサービスを停止し、
+# 自動起動設定も解除します。
+#
+# サービスが未登録または未起動でも、
+# アンインストール処理を継続できるようにしています。
 cat > "${WORK_DIR}/DEBIAN/prerm" <<'PRERM'
 #!/usr/bin/env bash
-
 set -e
 
 systemctl stop \
@@ -220,9 +253,13 @@ chmod 0755 "${WORK_DIR}/DEBIAN/prerm"
 # アンインストール後処理の作成
 # ------------------------------------------------------------
 
+# Unitファイル削除後にsystemdの定義を再読み込みします。
+#
+# linux-edge-inspectionユーザーとグループは、
+# 他のLinux Edge Inspectionパッケージでも共通使用するため、
+# このパッケージの削除時には削除しません。
 cat > "${WORK_DIR}/DEBIAN/postrm" <<'POSTRM'
 #!/usr/bin/env bash
-
 set -e
 
 systemctl daemon-reload || true
@@ -236,12 +273,19 @@ chmod 0755 "${WORK_DIR}/DEBIAN/postrm"
 # Debianパッケージの作成
 # ------------------------------------------------------------
 
+# 完成するdebファイルのパスです。
 PACKAGE_PATH="${OUTPUT_DIR}/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}.deb"
 
+# 作業ディレクトリからdebパッケージを作成します。
+#
+# --root-owner-groupを指定することで、
+# パッケージ内ファイルの所有者をroot:rootとして扱います。
 dpkg-deb \
     --build \
     --root-owner-group \
     "${WORK_DIR}" \
     "${PACKAGE_PATH}"
 
+# GitHub Actionsや手動実行時に、
+# 作成されたファイルの場所を確認できるように表示します。
 echo "Created: ${PACKAGE_PATH}"
