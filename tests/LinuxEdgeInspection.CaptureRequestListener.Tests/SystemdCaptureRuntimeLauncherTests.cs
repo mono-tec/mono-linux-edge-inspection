@@ -77,7 +77,7 @@ public sealed class SystemdCaptureRuntimeLauncherTests
     }
 
     [Fact]
-    public async Task LaunchAsync_ExecutesSystemctlRestartCommand()
+    public async Task LaunchAsync_ExecutesSudoSystemctlRestartCommand()
     {
         var commandRunner =
             new FakeSystemCommandRunner(
@@ -93,13 +93,15 @@ public sealed class SystemdCaptureRuntimeLauncherTests
             commandRunner.ExecutionCount);
 
         Assert.Equal(
-            "/usr/bin/systemctl",
+            "/usr/bin/sudo",
             commandRunner.LastFileName);
 
         Assert.Equal(
             [
-                "restart",
-                "linux-edge-inspection-runtime.service"
+                "-n",
+            "/usr/bin/systemctl",
+            "restart",
+            "linux-edge-inspection-runtime.service"
             ],
             commandRunner.LastArguments);
 
