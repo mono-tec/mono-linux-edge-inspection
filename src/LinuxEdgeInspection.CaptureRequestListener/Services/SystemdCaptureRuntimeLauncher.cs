@@ -17,6 +17,11 @@ public sealed class SystemdCaptureRuntimeLauncher
     private const string CancelledErrorCode =
         "CAPTURE_RUNTIME_CANCELLED";
 
+    // systemd Unitを専用ユーザーから再起動するため、
+    // sudoを非対話モードで使用します。
+    private const string SudoPath =
+        "/usr/bin/sudo";
+
     private readonly ISystemCommandRunner _commandRunner;
     private readonly ICaptureRuntimeResultReader _resultReader;
     private readonly string _systemctlPath;
@@ -84,8 +89,10 @@ public sealed class SystemdCaptureRuntimeLauncher
 
         var executionResult =
             await _commandRunner.ExecuteAsync(
-                _systemctlPath,
+                SudoPath,
                 [
+                    "-n",
+                    _systemctlPath,
                     "restart",
                     _serviceName
                 ],
