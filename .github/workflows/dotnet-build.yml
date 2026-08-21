@@ -911,4 +911,5 @@ jobs:
             artifacts/packages/linux-edge-inspection-inspection-worker_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-management-api_${{ env.VERSION }}_amd64.deb
+            artifacts/packages/linux-edge-inspection-image-cleanup_${{ env.VERSION }}_amd64.deb
           generate_release_notes: true
