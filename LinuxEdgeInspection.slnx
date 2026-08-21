@@ -8,6 +8,11 @@
     <File Path="packaging/capture-request-listener-deb/build-deb.sh" />
     <File Path="packaging/capture-request-listener-deb/linux-edge-inspection-capture-request-listener.service" />
   </Folder>
+  <Folder Name="/packaging/image-cleanup-deb/">
+    <File Path="packaging/image-cleanup-deb/build-deb.sh" />
+    <File Path="packaging/image-cleanup-deb/linux-edge-inspection-image-cleanup.service" />
+    <File Path="packaging/image-cleanup-deb/linux-edge-inspection-image-cleanup.timer" />
+  </Folder>
   <Folder Name="/packaging/inspection-worker-deb/">
     <File Path="packaging/inspection-worker-deb/build-deb.sh" />
     <File Path="packaging/inspection-worker-deb/linux-edge-inspection-inspection-worker.service" />
@@ -33,6 +38,7 @@
     <Project Path="src/LinuxEdgeInspection.Analyzer/LinuxEdgeInspection.Analyzer.csproj" />
     <Project Path="src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj" Id="0cf01b56-230c-4f3d-9b09-f26ea0573ef0" />
     <Project Path="src/LinuxEdgeInspection.Contracts/LinuxEdgeInspection.Contracts.csproj" />
+    <Project Path="src/LinuxEdgeInspection.ImageCleanup/LinuxEdgeInspection.ImageCleanup.csproj" />
     <Project Path="src/LinuxEdgeInspection.InspectionWorker/LinuxEdgeInspection.InspectionWorker.csproj" />
     <Project Path="src/LinuxEdgeInspection.Ipc/LinuxEdgeInspection.Ipc.csproj" />
     <Project Path="src/LinuxEdgeInspection.Preprocessor/LinuxEdgeInspection.Preprocessor.csproj" />
@@ -56,6 +62,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/LinuxEdgeInspection.Analyzer.Tests/LinuxEdgeInspection.Analyzer.Tests.csproj" />
     <Project Path="tests/LinuxEdgeInspection.CaptureRequestListener.Tests/LinuxEdgeInspection.CaptureRequestListener.Tests.csproj" Id="9756f9ed-d2ab-4180-8fca-f4927845afb7" />
+    <Project Path="tests/LinuxEdgeInspection.ImageCleanup.Tests/LinuxEdgeInspection.ImageCleanup.Tests.csproj" />
     <Project Path="tests/LinuxEdgeInspection.InspectionWorker.Tests/LinuxEdgeInspection.InspectionWorker.Tests.csproj" />
     <Project Path="tests/LinuxEdgeInspection.Preprocessor.Tests/LinuxEdgeInspection.Preprocessor.Tests.csproj" />
     <Project Path="tests/LinuxEdgeInspection.Runtime.Tests/LinuxEdgeInspection.Runtime.Tests.csproj" Id="22b7f869-f60b-4a8b-813e-07a373638f14" />

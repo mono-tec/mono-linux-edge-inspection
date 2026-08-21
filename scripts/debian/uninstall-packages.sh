@@ -3,6 +3,7 @@
 # Linux Edge InspectionのDebian Packageをまとめてアンインストールします。
 #
 # 対象パッケージ:
+# - linux-edge-inspection-image-cleanup
 # - linux-edge-inspection-management
 # - linux-edge-inspection-management-api
 # - linux-edge-inspection-inspection-worker
@@ -10,9 +11,12 @@
 # - linux-edge-inspection-runtime
 #
 # アンインストール順は依存関係や利用関係を考慮し、
-# Management → Management API → Inspection Worker
-# → Capture Request Listener → Runtime
+# Image Cleanup → Management → Management API
+# → Inspection Worker → Capture Request Listener → Runtime
 # とします。
+#
+# Image Cleanupはsystemd timerから起動されるため、
+# パッケージ削除前にtimerを停止・無効化します。
 #
 # 本スクリプトでは完全アンインストールとして、
 # 以下のLinux Edge Inspection専用リソースも削除します。
@@ -29,6 +33,7 @@ set -euo pipefail
 # パッケージ名
 # ------------------------------------------------------------
 
+IMAGE_CLEANUP_PACKAGE="linux-edge-inspection-image-cleanup"
 MANAGEMENT_PACKAGE="linux-edge-inspection-management"
 MANAGEMENT_API_PACKAGE="linux-edge-inspection-management-api"
 WORKER_PACKAGE="linux-edge-inspection-inspection-worker"
@@ -56,9 +61,34 @@ DATA_DIRECTORY="/var/lib/linux-edge-inspection"
 SUDOERS_FILE="/etc/sudoers.d/linux-edge-inspection-runtime"
 
 # ------------------------------------------------------------
+# Image Cleanup Timerの停止
+# ------------------------------------------------------------
+
+echo "Stopping Linux Edge Inspection Image Cleanup timer..."
+
+# Image Cleanupの定期実行を停止します。
+#
+# アンインストール処理中にtimerからImage Cleanupが
+# 新しく起動されないよう、他のサービスより先に停止します。
+sudo systemctl stop \
+  linux-edge-inspection-image-cleanup.timer \
+  2>/dev/null || true
+
+# 次回起動時にもtimerが自動有効化されないようにします。
+sudo systemctl disable \
+  linux-edge-inspection-image-cleanup.timer \
+  2>/dev/null || true
+
+# Image Cleanupが実行中の場合は停止します。
+sudo systemctl stop \
+  linux-edge-inspection-image-cleanup.service \
+  2>/dev/null || true
+
+# ------------------------------------------------------------
 # サービス停止
 # ------------------------------------------------------------
 
+echo
 echo "Stopping Linux Edge Inspection services..."
 
 # Management UIを停止します。
@@ -93,11 +123,16 @@ sudo systemctl stop \
 echo
 echo "Removing Linux Edge Inspection packages..."
 
-# 上位側のManagement / Management API / Workerから順に指定します。
+# Image Cleanupを含む6パッケージを削除します。
+#
+# Image Cleanupは撮像データを利用する側なので先に削除し、
+# その後、上位側のManagement / Management API / Workerから
+# Listener / Runtimeの順で削除します。
 #
 # 各パッケージのprerm / postrmでも、
-# サービス停止やSocket残骸の削除などを実行します。
+# Service / Timer停止やSocket残骸の削除などを実行します。
 sudo apt-get remove -y \
+  "${IMAGE_CLEANUP_PACKAGE}" \
   "${MANAGEMENT_PACKAGE}" \
   "${MANAGEMENT_API_PACKAGE}" \
   "${WORKER_PACKAGE}" \
@@ -137,8 +172,10 @@ echo "Removing Linux Edge Inspection data directory..."
 # 撮像画像やcapture-result.jsonなど、
 # Linux Edge Inspection専用データを削除します。
 #
-# 本システムでは判定用画像を保持対象としないため、
-# 完全アンインストール時にまとめて削除します。
+# Image Cleanupパッケージ単体のアンインストールでは
+# 撮像画像を削除しませんが、
+# 本スクリプトは製品全体の完全アンインストールを目的とするため、
+# 共通Data Directoryをまとめて削除します。
 sudo rm -rf \
   "${DATA_DIRECTORY}"
 
@@ -149,7 +186,7 @@ sudo rm -rf \
 echo
 echo "Removing Linux Edge Inspection service user..."
 
-# 専用ユーザーを削除します。
+# Linux Edge Inspection共通実行ユーザーを削除します。
 #
 # videoやsystemd-journalなどの補助グループへの所属も、
 # ユーザー削除に伴って不要になります。
@@ -164,6 +201,7 @@ sudo userdel \
 echo
 echo "Removing Linux Edge Inspection service group..."
 
+# Linux Edge Inspection共通グループを削除します。
 sudo groupdel \
   "${SERVICE_GROUP}" \
   2>/dev/null || true
@@ -172,6 +210,7 @@ sudo groupdel \
 # systemd定義の再読み込み
 # ------------------------------------------------------------
 
+# Package削除後のService / Timer定義をsystemdへ反映します。
 sudo systemctl daemon-reload
 
 # ------------------------------------------------------------
@@ -209,6 +248,21 @@ if getent group "${SERVICE_GROUP}" >/dev/null 2>&1; then
 fi
 
 # ------------------------------------------------------------
+# Image Cleanup Timer残存確認
+# ------------------------------------------------------------
+
+# Unitファイルやenableリンクが残っていないか確認します。
+if systemctl list-unit-files \
+  | grep -q '^linux-edge-inspection-image-cleanup\.timer'; then
+  echo "  Remaining timer: linux-edge-inspection-image-cleanup.timer"
+fi
+
+if systemctl list-unit-files \
+  | grep -q '^linux-edge-inspection-image-cleanup\.service'; then
+  echo "  Remaining service: linux-edge-inspection-image-cleanup.service"
+fi
+
+# ------------------------------------------------------------
 # 完了メッセージ
 # ------------------------------------------------------------
 
@@ -217,7 +271,7 @@ echo "Uninstallation completed."
 
 echo
 echo "Removed resources:"
-echo "  Packages"
+echo "  Packages          : 6 Linux Edge Inspection packages"
 echo "  Runtime directory : ${RUNTIME_DIRECTORY}"
 echo "  Data directory    : ${DATA_DIRECTORY}"
 echo "  Sudoers           : ${SUDOERS_FILE}"

@@ -1,0 +1,15 @@
+[Unit]
+# ImageCleanupサービスを定期実行するtimer
+Description=Run Linux Edge Inspection Image Cleanup Daily
+
+[Timer]
+# 1日1回実行する
+OnCalendar=daily
+
+# 予定時刻に端末が停止していた場合、
+# 次回起動時に未実行分を実行する
+Persistent=true
+
+[Install]
+# systemd timerとして有効化する
+WantedBy=timers.target

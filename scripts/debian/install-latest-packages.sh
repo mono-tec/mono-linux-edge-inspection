@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Linux Edge Inspectionの最新GitHub Releaseを取得し、
-# 5つのDebian Packageをまとめてダウンロード・インストールします。
+# 6つのDebian Packageをまとめてダウンロード・インストールします。
 #
 # 対象パッケージ:
 # - linux-edge-inspection-runtime
@@ -9,6 +9,7 @@
 # - linux-edge-inspection-inspection-worker
 # - linux-edge-inspection-management
 # - linux-edge-inspection-management-api
+# - linux-edge-inspection-image-cleanup
 
 set -euo pipefail
 
@@ -90,6 +91,8 @@ MANAGEMENT_PACKAGE="linux-edge-inspection-management_${PACKAGE_VERSION}_${ARCHIT
 
 MANAGEMENT_API_PACKAGE="linux-edge-inspection-management-api_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
 
+IMAGE_CLEANUP_PACKAGE="linux-edge-inspection-image-cleanup_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
+
 DOWNLOAD_BASE_URL="${GITHUB_RELEASE_BASE_URL}/download/${LATEST_TAG}"
 
 # ------------------------------------------------------------
@@ -112,6 +115,7 @@ download_package "${LISTENER_PACKAGE}"
 download_package "${WORKER_PACKAGE}"
 download_package "${MANAGEMENT_PACKAGE}"
 download_package "${MANAGEMENT_API_PACKAGE}"
+download_package "${IMAGE_CLEANUP_PACKAGE}"
 
 echo
 echo "Downloaded packages:"
@@ -121,7 +125,8 @@ ls -lh \
   "${LISTENER_PACKAGE}" \
   "${WORKER_PACKAGE}" \
   "${MANAGEMENT_PACKAGE}" \
-  "${MANAGEMENT_API_PACKAGE}"
+  "${MANAGEMENT_API_PACKAGE}" \
+  "${IMAGE_CLEANUP_PACKAGE}"
 
 # ------------------------------------------------------------
 # Debian Packageをまとめてインストール
@@ -130,7 +135,7 @@ ls -lh \
 echo
 echo "Installing Linux Edge Inspection packages..."
 
-# 5つを同時にaptへ渡すことで、
+# 6つを同時にaptへ渡すことで、
 # ローカルdeb同士の依存関係と.NET Runtime依存を
 # aptにまとめて解決させます。
 sudo apt-get update
@@ -140,7 +145,8 @@ sudo apt-get install -y \
   "./${LISTENER_PACKAGE}" \
   "./${WORKER_PACKAGE}" \
   "./${MANAGEMENT_PACKAGE}" \
-  "./${MANAGEMENT_API_PACKAGE}"
+  "./${MANAGEMENT_API_PACKAGE}" \
+  "./${IMAGE_CLEANUP_PACKAGE}"
 
 # ------------------------------------------------------------
 # インストール結果の確認
@@ -162,7 +168,7 @@ echo
 echo "Installation completed."
 
 echo
-echo "Services are not automatically started."
+echo "Services and timers are not automatically started."
 
 echo
 echo "Example:"
@@ -170,6 +176,18 @@ echo "  sudo systemctl start linux-edge-inspection-capture-request-listener.serv
 echo "  sudo systemctl start linux-edge-inspection-inspection-worker.service"
 echo "  sudo systemctl start linux-edge-inspection-management-api.service"
 echo "  sudo systemctl start linux-edge-inspection-management.service"
+
+echo
+echo "Image Cleanup:"
+echo "  Run once:"
+echo "    sudo systemctl start linux-edge-inspection-image-cleanup.service"
+echo
+echo "  Enable scheduled cleanup:"
+echo "    sudo systemctl enable --now linux-edge-inspection-image-cleanup.timer"
+echo
+echo "  Check timer:"
+echo "    systemctl status linux-edge-inspection-image-cleanup.timer"
+echo "    systemctl list-timers linux-edge-inspection-image-cleanup.timer"
 
 echo
 echo "Management UI:"

@@ -1,0 +1,23 @@
+[Unit]
+# 撮像画像の定期削除処理を実行するone-shotサービス
+Description=Linux Edge Inspection Image Cleanup
+
+# ローカルファイルシステムが利用可能になってから実行する
+After=local-fs.target
+
+[Service]
+# 1回実行して終了するバッチ形式
+Type=oneshot
+
+# Linux Edge Inspection共通のサービスユーザーで実行する
+User=linux-edge-inspection
+Group=linux-edge-inspection
+
+# アプリケーションの配置先
+WorkingDirectory=/opt/linux-edge-inspection-image-cleanup
+
+# Production設定で実行する
+Environment=DOTNET_ENVIRONMENT=Production
+
+# ImageCleanupアプリを実行する
+ExecStart=/usr/bin/linux-edge-inspection-image-cleanup

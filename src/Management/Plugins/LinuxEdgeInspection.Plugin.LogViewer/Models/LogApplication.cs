@@ -28,5 +28,10 @@ public enum LogApplication
     /// <summary>
     /// カメラ撮像などの実処理を行うRuntimeのログ。
     /// </summary>
-    Runtime
+    Runtime,
+
+    /// <summary>
+    /// 保持期間を超えた撮像画像を削除するImageCleanupのログ。
+    /// </summary>
+    ImageCleanup
 }

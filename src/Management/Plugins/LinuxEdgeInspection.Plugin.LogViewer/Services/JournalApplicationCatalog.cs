@@ -10,18 +10,26 @@ public static class JournalApplicationCatalog
             [LogApplication.Management] = new(
                 "Management",
                 "linux-edge-inspection-management.service"),
+
             [LogApplication.ManagementApi] = new(
                 "Management.Api",
                 "linux-edge-inspection-management-api.service"),
+
             [LogApplication.InspectionWorker] = new(
                 "InspectionWorker",
                 "linux-edge-inspection-inspection-worker.service"),
+
             [LogApplication.CaptureRequestListener] = new(
                 "CaptureRequestListener",
                 "linux-edge-inspection-capture-request-listener.service"),
+
             [LogApplication.Runtime] = new(
                 "Runtime",
-                "linux-edge-inspection-runtime.service")
+                "linux-edge-inspection-runtime.service"),
+
+            [LogApplication.ImageCleanup] = new(
+                "ImageCleanup",
+                "linux-edge-inspection-image-cleanup.service")
         };
 
     public static JournalApplication Get(LogApplication application) =>
