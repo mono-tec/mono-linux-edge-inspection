@@ -403,26 +403,38 @@ public sealed class ImageCleanupServiceTests
         }
 
         using var directory = new TestDirectory();
-        var outsideFile = directory.CreateFile(
+        using var outsideDirectory = new TestDirectory();
+
+        // RootDirectory外にリンク先ファイルを作成する
+        var outsideFile = outsideDirectory.CreateFile(
             "outside-target.dat",
             CurrentTime.AddDays(-8));
+
+        // RootDirectory直下にはSymbolic Linkだけを配置する
         var linkPath = System.IO.Path.Combine(
             directory.Path,
             "linked.jpg");
+
         File.CreateSymbolicLink(
             linkPath,
             outsideFile);
+
         var logger = new TestLogger<ImageCleanupService>();
 
         var result = CreateService(
             directory.Path,
             logger: logger).Cleanup();
 
+        // リンク先の実ファイルは削除されない
         Assert.True(File.Exists(outsideFile));
+
+        // Symbolic Link自体も残る
         Assert.NotNull(
             new FileInfo(linkPath).LinkTarget);
+
         Assert.Equal(0, result.DeletedCount);
         Assert.Equal(1, result.SkippedCount);
+
         Assert.Contains(
             logger.Entries,
             entry =>
