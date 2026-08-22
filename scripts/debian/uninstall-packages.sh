@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-# Linux Edge InspectionのDebian Packageをまとめてアンインストールします。
+# Linux Edge Inspection の Debian Package をまとめてアンインストールします。
+#
+# amd64 / arm64 共通で使用できます。
 #
 # 対象パッケージ:
 # - linux-edge-inspection-image-cleanup
@@ -15,19 +17,30 @@
 # → Inspection Worker → Capture Request Listener → Runtime
 # とします。
 #
-# Image Cleanupはsystemd timerから起動されるため、
-# パッケージ削除前にtimerを停止・無効化します。
+# Image Cleanup は systemd timer から起動されるため、
+# パッケージ削除前に timer を停止・無効化します。
 #
 # 本スクリプトでは完全アンインストールとして、
-# 以下のLinux Edge Inspection専用リソースも削除します。
+# 以下の Linux Edge Inspection 専用リソースも削除します。
 #
-# - Unix Domain Socket用Runtime Directory
-# - 撮像画像・Runtime状態ファイル
-# - Runtime再起動用sudoers設定
-# - Linux Edge Inspection専用ユーザー
-# - Linux Edge Inspection専用グループ
+# - Unix Domain Socket 用 Runtime Directory
+# - 撮像画像・Runtime 状態ファイル
+# - Runtime 再起動用 sudoers 設定
+# - Linux Edge Inspection 専用ユーザー
+# - Linux Edge Inspection 専用グループ
 
 set -euo pipefail
+
+# ------------------------------------------------------------
+# 必要コマンドの確認
+# ------------------------------------------------------------
+
+for command_name in apt-get dpkg systemctl id getent userdel groupdel; do
+  if ! command -v "${command_name}" >/dev/null 2>&1; then
+    echo "ERROR: Required command not found: ${command_name}"
+    exit 1
+  fi
+done
 
 # ------------------------------------------------------------
 # パッケージ名
@@ -40,46 +53,51 @@ WORKER_PACKAGE="linux-edge-inspection-inspection-worker"
 LISTENER_PACKAGE="linux-edge-inspection-capture-request-listener"
 RUNTIME_PACKAGE="linux-edge-inspection-runtime"
 
+PACKAGES=(
+  "${IMAGE_CLEANUP_PACKAGE}"
+  "${MANAGEMENT_PACKAGE}"
+  "${MANAGEMENT_API_PACKAGE}"
+  "${WORKER_PACKAGE}"
+  "${LISTENER_PACKAGE}"
+  "${RUNTIME_PACKAGE}"
+)
+
 # ------------------------------------------------------------
 # 共通リソース
 # ------------------------------------------------------------
 
-# Linux Edge Inspection専用実行ユーザーです。
 SERVICE_USER="linux-edge-inspection"
-
-# Linux Edge Inspection専用グループです。
 SERVICE_GROUP="linux-edge-inspection"
 
-# Unix Domain Socketを配置するRuntime Directoryです。
 RUNTIME_DIRECTORY="/run/linux-edge-inspection"
-
-# 撮像画像やRuntime状態ファイルを保存するData Directoryです。
 DATA_DIRECTORY="/var/lib/linux-edge-inspection"
 
-# Capture Request ListenerからRuntimeを再起動するための
-# sudoers設定ファイルです。
 SUDOERS_FILE="/etc/sudoers.d/linux-edge-inspection-runtime"
 
 # ------------------------------------------------------------
-# Image Cleanup Timerの停止
+# 実行環境の表示
 # ------------------------------------------------------------
 
+ARCHITECTURE="$(dpkg --print-architecture)"
+
+echo "Linux Edge Inspection uninstaller"
+echo "Architecture: ${ARCHITECTURE}"
+
+# ------------------------------------------------------------
+# Image Cleanup Timer の停止
+# ------------------------------------------------------------
+
+echo
 echo "Stopping Linux Edge Inspection Image Cleanup timer..."
 
-# Image Cleanupの定期実行を停止します。
-#
-# アンインストール処理中にtimerからImage Cleanupが
-# 新しく起動されないよう、他のサービスより先に停止します。
 sudo systemctl stop \
   linux-edge-inspection-image-cleanup.timer \
   2>/dev/null || true
 
-# 次回起動時にもtimerが自動有効化されないようにします。
 sudo systemctl disable \
   linux-edge-inspection-image-cleanup.timer \
   2>/dev/null || true
 
-# Image Cleanupが実行中の場合は停止します。
 sudo systemctl stop \
   linux-edge-inspection-image-cleanup.service \
   2>/dev/null || true
@@ -91,91 +109,96 @@ sudo systemctl stop \
 echo
 echo "Stopping Linux Edge Inspection services..."
 
-# Management UIを停止します。
 sudo systemctl stop \
   linux-edge-inspection-management.service \
   2>/dev/null || true
 
-# Management APIを停止します。
 sudo systemctl stop \
   linux-edge-inspection-management-api.service \
   2>/dev/null || true
 
-# Inspection Workerを停止します。
 sudo systemctl stop \
   linux-edge-inspection-inspection-worker.service \
   2>/dev/null || true
 
-# Capture Request Listenerを停止します。
 sudo systemctl stop \
   linux-edge-inspection-capture-request-listener.service \
   2>/dev/null || true
 
-# Runtimeを停止します。
 sudo systemctl stop \
   linux-edge-inspection-runtime.service \
   2>/dev/null || true
 
 # ------------------------------------------------------------
-# Debian Packageのアンインストール
+# インストール済みパッケージの確認
 # ------------------------------------------------------------
 
 echo
-echo "Removing Linux Edge Inspection packages..."
+echo "Checking installed Linux Edge Inspection packages..."
 
-# Image Cleanupを含む6パッケージを削除します。
-#
-# Image Cleanupは撮像データを利用する側なので先に削除し、
-# その後、上位側のManagement / Management API / Workerから
-# Listener / Runtimeの順で削除します。
-#
-# 各パッケージのprerm / postrmでも、
-# Service / Timer停止やSocket残骸の削除などを実行します。
-sudo apt-get remove -y \
-  "${IMAGE_CLEANUP_PACKAGE}" \
-  "${MANAGEMENT_PACKAGE}" \
-  "${MANAGEMENT_API_PACKAGE}" \
-  "${WORKER_PACKAGE}" \
-  "${LISTENER_PACKAGE}" \
-  "${RUNTIME_PACKAGE}"
+INSTALLED_PACKAGES=()
+
+for package_name in "${PACKAGES[@]}"; do
+  if dpkg-query -W \
+    -f='${db:Status-Status}' \
+    "${package_name}" \
+    2>/dev/null \
+    | grep -qx 'installed'; then
+
+    echo "  Installed: ${package_name}"
+    INSTALLED_PACKAGES+=("${package_name}")
+  else
+    echo "  Not installed: ${package_name}"
+  fi
+done
 
 # ------------------------------------------------------------
-# sudoers設定の削除
+# Debian Package のアンインストール
+# ------------------------------------------------------------
+
+if [[ "${#INSTALLED_PACKAGES[@]}" -gt 0 ]]; then
+  echo
+  echo "Removing Linux Edge Inspection packages..."
+
+  # PACKAGES 配列の順序で確認しているため、
+  # Image Cleanup → Management → Management API
+  # → Inspection Worker → Capture Request Listener → Runtime
+  # の順で apt-get へ渡します。
+  sudo apt-get remove -y "${INSTALLED_PACKAGES[@]}"
+else
+  echo
+  echo "No Linux Edge Inspection packages are currently installed."
+fi
+
+# ------------------------------------------------------------
+# sudoers 設定の削除
 # ------------------------------------------------------------
 
 echo
 echo "Removing Linux Edge Inspection sudoers configuration..."
 
-# Capture Request Listener用に追加した、
-# Runtime再起動専用sudoers設定が残っている場合は削除します。
 sudo rm -f \
   "${SUDOERS_FILE}"
 
 # ------------------------------------------------------------
-# Runtime Directoryの削除
+# Runtime Directory の削除
 # ------------------------------------------------------------
 
 echo
 echo "Removing Linux Edge Inspection runtime directory..."
 
-# Unix Domain Socketなどの一時Runtimeデータを削除します。
 sudo rm -rf \
   "${RUNTIME_DIRECTORY}"
 
 # ------------------------------------------------------------
-# Data Directoryの削除
+# Data Directory の削除
 # ------------------------------------------------------------
 
 echo
 echo "Removing Linux Edge Inspection data directory..."
 
-# 撮像画像やcapture-result.jsonなど、
-# Linux Edge Inspection専用データを削除します。
-#
-# Image Cleanupパッケージ単体のアンインストールでは
-# 撮像画像を削除しませんが、
 # 本スクリプトは製品全体の完全アンインストールを目的とするため、
-# 共通Data Directoryをまとめて削除します。
+# 撮像画像や Runtime 状態ファイルを含む共通 Data Directory も削除します。
 sudo rm -rf \
   "${DATA_DIRECTORY}"
 
@@ -186,13 +209,11 @@ sudo rm -rf \
 echo
 echo "Removing Linux Edge Inspection service user..."
 
-# Linux Edge Inspection共通実行ユーザーを削除します。
-#
-# videoやsystemd-journalなどの補助グループへの所属も、
-# ユーザー削除に伴って不要になります。
-sudo userdel \
-  "${SERVICE_USER}" \
-  2>/dev/null || true
+if id "${SERVICE_USER}" >/dev/null 2>&1; then
+  sudo userdel "${SERVICE_USER}"
+else
+  echo "  User does not exist: ${SERVICE_USER}"
+fi
 
 # ------------------------------------------------------------
 # 専用グループの削除
@@ -201,17 +222,18 @@ sudo userdel \
 echo
 echo "Removing Linux Edge Inspection service group..."
 
-# Linux Edge Inspection共通グループを削除します。
-sudo groupdel \
-  "${SERVICE_GROUP}" \
-  2>/dev/null || true
+if getent group "${SERVICE_GROUP}" >/dev/null 2>&1; then
+  sudo groupdel "${SERVICE_GROUP}"
+else
+  echo "  Group does not exist: ${SERVICE_GROUP}"
+fi
 
 # ------------------------------------------------------------
-# systemd定義の再読み込み
+# systemd 定義の再読み込み
 # ------------------------------------------------------------
 
-# Package削除後のService / Timer定義をsystemdへ反映します。
 sudo systemctl daemon-reload
+sudo systemctl reset-failed 2>/dev/null || true
 
 # ------------------------------------------------------------
 # アンインストール結果の確認
@@ -220,46 +242,75 @@ sudo systemctl daemon-reload
 echo
 echo "Remaining Linux Edge Inspection packages:"
 
-dpkg -l \
-  | grep 'linux-edge-inspection' \
-  || true
+REMAINING_PACKAGES="$(
+  dpkg -l \
+    | grep 'linux-edge-inspection' \
+    || true
+)"
+
+if [[ -n "${REMAINING_PACKAGES}" ]]; then
+  echo "${REMAINING_PACKAGES}"
+else
+  echo "  None"
+fi
 
 echo
 echo "Remaining Linux Edge Inspection resources:"
 
+REMAINING_RESOURCE_FOUND=false
+
 if [[ -e "${RUNTIME_DIRECTORY}" ]]; then
   echo "  Remaining: ${RUNTIME_DIRECTORY}"
+  REMAINING_RESOURCE_FOUND=true
 fi
 
 if [[ -e "${DATA_DIRECTORY}" ]]; then
   echo "  Remaining: ${DATA_DIRECTORY}"
+  REMAINING_RESOURCE_FOUND=true
 fi
 
 if [[ -e "${SUDOERS_FILE}" ]]; then
   echo "  Remaining: ${SUDOERS_FILE}"
+  REMAINING_RESOURCE_FOUND=true
 fi
 
 if id "${SERVICE_USER}" >/dev/null 2>&1; then
   echo "  Remaining user: ${SERVICE_USER}"
+  REMAINING_RESOURCE_FOUND=true
 fi
 
 if getent group "${SERVICE_GROUP}" >/dev/null 2>&1; then
   echo "  Remaining group: ${SERVICE_GROUP}"
+  REMAINING_RESOURCE_FOUND=true
+fi
+
+if [[ "${REMAINING_RESOURCE_FOUND}" == false ]]; then
+  echo "  None"
 fi
 
 # ------------------------------------------------------------
-# Image Cleanup Timer残存確認
+# Image Cleanup Timer / Service 残存確認
 # ------------------------------------------------------------
 
-# Unitファイルやenableリンクが残っていないか確認します。
+echo
+echo "Checking remaining systemd units..."
+
+REMAINING_UNIT_FOUND=false
+
 if systemctl list-unit-files \
   | grep -q '^linux-edge-inspection-image-cleanup\.timer'; then
   echo "  Remaining timer: linux-edge-inspection-image-cleanup.timer"
+  REMAINING_UNIT_FOUND=true
 fi
 
 if systemctl list-unit-files \
   | grep -q '^linux-edge-inspection-image-cleanup\.service'; then
   echo "  Remaining service: linux-edge-inspection-image-cleanup.service"
+  REMAINING_UNIT_FOUND=true
+fi
+
+if [[ "${REMAINING_UNIT_FOUND}" == false ]]; then
+  echo "  None"
 fi
 
 # ------------------------------------------------------------
@@ -270,8 +321,9 @@ echo
 echo "Uninstallation completed."
 
 echo
+echo "Target architecture : ${ARCHITECTURE}"
 echo "Removed resources:"
-echo "  Packages          : 6 Linux Edge Inspection packages"
+echo "  Packages          : Linux Edge Inspection packages"
 echo "  Runtime directory : ${RUNTIME_DIRECTORY}"
 echo "  Data directory    : ${DATA_DIRECTORY}"
 echo "  Sudoers           : ${SUDOERS_FILE}"

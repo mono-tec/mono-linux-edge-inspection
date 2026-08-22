@@ -12,8 +12,22 @@ permissions:
 
 jobs:
   build-and-release:
-    name: Build and release Linux x64 applications
+    name: Build and package ${{ matrix.name }} applications
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            runtime_identifier: linux-x64
+            package_architecture: amd64
+            artifact_name: LinuxEdgeInspection-linux-x64
+
+          - name: Linux ARM64
+            runtime_identifier: linux-arm64
+            package_architecture: arm64
+            artifact_name: LinuxEdgeInspection-linux-arm64
 
     steps:
       # ============================================================
@@ -105,14 +119,14 @@ jobs:
       # LinuxEdgeInspection.Runtime
       # ============================================================
 
-      # linux-x64向けpublishに必要な依存関係を復元します。
+      # ${{ matrix.runtime_identifier }}向けpublishに必要な依存関係を復元します。
       - name: Restore camera runtime dependencies
         run: >
           dotnet restore
           src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
 
-      # LinuxEdgeInspection.Runtimeをlinux-x64向けにpublishします。
+      # LinuxEdgeInspection.Runtimeを${{ matrix.runtime_identifier }}向けにpublishします。
       #
       # framework-dependent構成のため、実機には
       # .NET 10 Runtimeが必要です。
@@ -121,7 +135,7 @@ jobs:
           dotnet publish
           src/LinuxEdgeInspection.Runtime/LinuxEdgeInspection.Runtime.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
           --self-contained false
           --no-restore
           --output artifacts/publish/linux-edge-inspection-runtime
@@ -212,8 +226,8 @@ jobs:
           chmod +x packaging/runtime-deb/build-deb.sh
 
           PACKAGE_VERSION="${VERSION}" \
-          PACKAGE_ARCHITECTURE="amd64" \
-          RUNTIME_IDENTIFIER="linux-x64" \
+          PACKAGE_ARCHITECTURE="${{ matrix.package_architecture }}" \
+          RUNTIME_IDENTIFIER="${{ matrix.runtime_identifier }}" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-runtime" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-runtime" \
           ./packaging/runtime-deb/build-deb.sh
@@ -222,21 +236,21 @@ jobs:
       # LinuxEdgeInspection.CaptureRequestListener
       # ============================================================
 
-      # linux-x64向けpublishに必要な依存関係を復元します。
+      # ${{ matrix.runtime_identifier }}向けpublishに必要な依存関係を復元します。
       - name: Restore Capture Request Listener dependencies
         run: >
           dotnet restore
           src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
 
       # LinuxEdgeInspection.CaptureRequestListenerを
-      # linux-x64向けにpublishします。
+      # ${{ matrix.runtime_identifier }}向けにpublishします。
       - name: Publish Capture Request Listener
         run: >
           dotnet publish
           src/LinuxEdgeInspection.CaptureRequestListener/LinuxEdgeInspection.CaptureRequestListener.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
           --self-contained false
           --no-restore
           --output artifacts/publish/linux-edge-inspection-capture-request-listener
@@ -327,8 +341,8 @@ jobs:
           chmod +x packaging/capture-request-listener-deb/build-deb.sh
 
           PACKAGE_VERSION="${VERSION}" \
-          PACKAGE_ARCHITECTURE="amd64" \
-          RUNTIME_IDENTIFIER="linux-x64" \
+          PACKAGE_ARCHITECTURE="${{ matrix.package_architecture }}" \
+          RUNTIME_IDENTIFIER="${{ matrix.runtime_identifier }}" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-capture-request-listener" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-capture-request-listener" \
           ./packaging/capture-request-listener-deb/build-deb.sh
@@ -338,15 +352,15 @@ jobs:
       # LinuxEdgeInspection.InspectionWorker
       # ============================================================
 
-      # linux-x64向けpublishに必要な依存関係を復元します。
+      # ${{ matrix.runtime_identifier }}向けpublishに必要な依存関係を復元します。
       - name: Restore Inspection Worker dependencies
         run: >
           dotnet restore
           src/LinuxEdgeInspection.InspectionWorker/LinuxEdgeInspection.InspectionWorker.csproj
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
 
       # LinuxEdgeInspection.InspectionWorkerを
-      # linux-x64向けにpublishします。
+      # ${{ matrix.runtime_identifier }}向けにpublishします。
       #
       # framework-dependent構成のため、実機には
       # .NET 10 Runtimeが必要です。
@@ -355,7 +369,7 @@ jobs:
           dotnet publish
           src/LinuxEdgeInspection.InspectionWorker/LinuxEdgeInspection.InspectionWorker.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
           --self-contained false
           --no-restore
           --output artifacts/publish/linux-edge-inspection-inspection-worker
@@ -448,8 +462,8 @@ jobs:
           chmod +x packaging/inspection-worker-deb/build-deb.sh
 
           PACKAGE_VERSION="${VERSION}" \
-          PACKAGE_ARCHITECTURE="amd64" \
-          RUNTIME_IDENTIFIER="linux-x64" \
+          PACKAGE_ARCHITECTURE="${{ matrix.package_architecture }}" \
+          RUNTIME_IDENTIFIER="${{ matrix.runtime_identifier }}" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-inspection-worker" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-inspection-worker" \
           ./packaging/inspection-worker-deb/build-deb.sh
@@ -458,15 +472,15 @@ jobs:
       # LinuxEdgeInspection.Management
       # ============================================================
 
-      # linux-x64向けpublishに必要な依存関係を復元します。
+      # ${{ matrix.runtime_identifier }}向けpublishに必要な依存関係を復元します。
       - name: Restore Management dependencies
         run: >
           dotnet restore
           src/Management/LinuxEdgeInspection.Management/LinuxEdgeInspection.Management.csproj
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
 
       # LinuxEdgeInspection.Managementを
-      # linux-x64向けにpublishします。
+      # ${{ matrix.runtime_identifier }}向けにpublishします。
       #
       # framework-dependent構成のため、実機には
       # ASP.NET Core Runtime 10が必要です。
@@ -475,7 +489,7 @@ jobs:
           dotnet publish
           src/Management/LinuxEdgeInspection.Management/LinuxEdgeInspection.Management.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
           --self-contained false
           --no-restore
           --output artifacts/publish/linux-edge-inspection-management
@@ -568,8 +582,8 @@ jobs:
           chmod +x packaging/management-deb/build-deb.sh
 
           PACKAGE_VERSION="${VERSION}" \
-          PACKAGE_ARCHITECTURE="amd64" \
-          RUNTIME_IDENTIFIER="linux-x64" \
+          PACKAGE_ARCHITECTURE="${{ matrix.package_architecture }}" \
+          RUNTIME_IDENTIFIER="${{ matrix.runtime_identifier }}" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-management" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-management" \
           ./packaging/management-deb/build-deb.sh
@@ -578,15 +592,15 @@ jobs:
       # LinuxEdgeInspection.Management.Api
       # ============================================================
 
-      # linux-x64向けpublishに必要な依存関係を復元します。
+      # ${{ matrix.runtime_identifier }}向けpublishに必要な依存関係を復元します。
       - name: Restore Management API dependencies
         run: >
           dotnet restore
           src/Management/LinuxEdgeInspection.Management.Api/LinuxEdgeInspection.Management.Api.csproj
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
 
       # LinuxEdgeInspection.Management.Apiを
-      # linux-x64向けにpublishします。
+      # ${{ matrix.runtime_identifier }}向けにpublishします。
       #
       # framework-dependent構成のため、実機には
       # ASP.NET Core Runtime 10が必要です。
@@ -595,7 +609,7 @@ jobs:
           dotnet publish
           src/Management/LinuxEdgeInspection.Management.Api/LinuxEdgeInspection.Management.Api.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
           --self-contained false
           --no-restore
           --output artifacts/publish/linux-edge-inspection-management-api
@@ -688,8 +702,8 @@ jobs:
           chmod +x packaging/management-api-deb/build-deb.sh
 
           PACKAGE_VERSION="${VERSION}" \
-          PACKAGE_ARCHITECTURE="amd64" \
-          RUNTIME_IDENTIFIER="linux-x64" \
+          PACKAGE_ARCHITECTURE="${{ matrix.package_architecture }}" \
+          RUNTIME_IDENTIFIER="${{ matrix.runtime_identifier }}" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-management-api" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-management-api" \
           ./packaging/management-api-deb/build-deb.sh
@@ -700,15 +714,15 @@ jobs:
       # LinuxEdgeInspection.ImageCleanup
       # ============================================================
 
-      # linux-x64向けpublishに必要な依存関係を復元します。
+      # ${{ matrix.runtime_identifier }}向けpublishに必要な依存関係を復元します。
       - name: Restore Image Cleanup dependencies
         run: >
           dotnet restore
           src/LinuxEdgeInspection.ImageCleanup/LinuxEdgeInspection.ImageCleanup.csproj
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
 
       # LinuxEdgeInspection.ImageCleanupを
-      # linux-x64向けにpublishします。
+      # ${{ matrix.runtime_identifier }}向けにpublishします。
       #
       # framework-dependent構成のため、実機には
       # .NET 10 Runtimeが必要です。
@@ -717,7 +731,7 @@ jobs:
           dotnet publish
           src/LinuxEdgeInspection.ImageCleanup/LinuxEdgeInspection.ImageCleanup.csproj
           --configuration Release
-          --runtime linux-x64
+          --runtime ${{ matrix.runtime_identifier }}
           --self-contained false
           --no-restore
           --output artifacts/publish/linux-edge-inspection-image-cleanup
@@ -810,8 +824,8 @@ jobs:
           chmod +x packaging/image-cleanup-deb/build-deb.sh
 
           PACKAGE_VERSION="${VERSION}" \
-          PACKAGE_ARCHITECTURE="amd64" \
-          RUNTIME_IDENTIFIER="linux-x64" \
+          PACKAGE_ARCHITECTURE="${{ matrix.package_architecture }}" \
+          RUNTIME_IDENTIFIER="${{ matrix.runtime_identifier }}" \
           PUBLISH_DIR="${GITHUB_WORKSPACE}/artifacts/publish/linux-edge-inspection-image-cleanup" \
           COMPLIANCE_DIR="${GITHUB_WORKSPACE}/artifacts/compliance/linux-edge-inspection-image-cleanup" \
           ./packaging/image-cleanup-deb/build-deb.sh
@@ -827,22 +841,22 @@ jobs:
           ls -la artifacts/packages
 
           dpkg-deb --info \
-            "artifacts/packages/linux-edge-inspection-runtime_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-runtime_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --info \
-            "artifacts/packages/linux-edge-inspection-capture-request-listener_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-capture-request-listener_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --info \
-            "artifacts/packages/linux-edge-inspection-inspection-worker_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-inspection-worker_${VERSION}_${{ matrix.package_architecture }}.deb"
           
           dpkg-deb --info \
-            "artifacts/packages/linux-edge-inspection-management_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-management_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --info \
-            "artifacts/packages/linux-edge-inspection-management-api_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-management-api_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --info \
-            "artifacts/packages/linux-edge-inspection-image-cleanup_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-image-cleanup_${VERSION}_${{ matrix.package_architecture }}.deb"
 
 
       # deb内部に意図したファイルが配置されていることを確認します。
@@ -850,22 +864,22 @@ jobs:
         shell: bash
         run: |
           dpkg-deb --contents \
-            "artifacts/packages/linux-edge-inspection-runtime_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-runtime_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --contents \
-            "artifacts/packages/linux-edge-inspection-capture-request-listener_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-capture-request-listener_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --contents \
-            "artifacts/packages/linux-edge-inspection-inspection-worker_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-inspection-worker_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --contents \
-            "artifacts/packages/linux-edge-inspection-management_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-management_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --contents \
-            "artifacts/packages/linux-edge-inspection-management-api_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-management-api_${VERSION}_${{ matrix.package_architecture }}.deb"
 
           dpkg-deb --contents \
-            "artifacts/packages/linux-edge-inspection-image-cleanup_${VERSION}_amd64.deb"
+            "artifacts/packages/linux-edge-inspection-image-cleanup_${VERSION}_${{ matrix.package_architecture }}.deb"
 
 
       # SBOM生成結果を確認します。
@@ -889,19 +903,74 @@ jobs:
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: LinuxEdgeInspection-linux-x64
+          name: ${{ matrix.artifact_name }}
           path: |
-            artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_amd64.deb
-            artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_amd64.deb
-            artifacts/packages/linux-edge-inspection-inspection-worker_${{ env.VERSION }}_amd64.deb
-            artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_amd64.deb
-            artifacts/packages/linux-edge-inspection-management-api_${{ env.VERSION }}_amd64.deb
-            artifacts/packages/linux-edge-inspection-image-cleanup_${{ env.VERSION }}_amd64.deb
+            artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_${{ matrix.package_architecture }}.deb
+            artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_${{ matrix.package_architecture }}.deb
+            artifacts/packages/linux-edge-inspection-inspection-worker_${{ env.VERSION }}_${{ matrix.package_architecture }}.deb
+            artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_${{ matrix.package_architecture }}.deb
+            artifacts/packages/linux-edge-inspection-management-api_${{ env.VERSION }}_${{ matrix.package_architecture }}.deb
+            artifacts/packages/linux-edge-inspection-image-cleanup_${{ env.VERSION }}_${{ matrix.package_architecture }}.deb
           if-no-files-found: error
           retention-days: 14
 
-      # タグに対応するGitHub Releaseを作成し、
-      # 6つのdebパッケージを添付します。
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-and-release
+
+    steps:
+      # Gitタグの先頭にあるvを除去し、Release添付ファイル名に使用します。
+      - name: Set version from Git tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version tag: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+
+          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
+          echo "Version: ${VERSION}"
+
+      # x64 / ARM64 のWorkflow Artifactをまとめて取得します。
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: LinuxEdgeInspection-linux-*
+          path: artifacts/packages
+          merge-multiple: true
+
+      # Releaseへ添付する12個のdebパッケージを確認します。
+      - name: Inspect release packages
+        shell: bash
+        run: |
+          ls -la artifacts/packages
+
+          expected_packages=(
+            "linux-edge-inspection-runtime_${VERSION}_amd64.deb"
+            "linux-edge-inspection-capture-request-listener_${VERSION}_amd64.deb"
+            "linux-edge-inspection-inspection-worker_${VERSION}_amd64.deb"
+            "linux-edge-inspection-management_${VERSION}_amd64.deb"
+            "linux-edge-inspection-management-api_${VERSION}_amd64.deb"
+            "linux-edge-inspection-image-cleanup_${VERSION}_amd64.deb"
+            "linux-edge-inspection-runtime_${VERSION}_arm64.deb"
+            "linux-edge-inspection-capture-request-listener_${VERSION}_arm64.deb"
+            "linux-edge-inspection-inspection-worker_${VERSION}_arm64.deb"
+            "linux-edge-inspection-management_${VERSION}_arm64.deb"
+            "linux-edge-inspection-management-api_${VERSION}_arm64.deb"
+            "linux-edge-inspection-image-cleanup_${VERSION}_arm64.deb"
+          )
+
+          for package in "${expected_packages[@]}"; do
+            if [[ ! -f "artifacts/packages/${package}" ]]; then
+              echo "Missing release package: ${package}"
+              exit 1
+            fi
+          done
+
+      # amd64 / arm64 の両方を同じGitHub Releaseへ添付します。
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
@@ -912,4 +981,10 @@ jobs:
             artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-management-api_${{ env.VERSION }}_amd64.deb
             artifacts/packages/linux-edge-inspection-image-cleanup_${{ env.VERSION }}_amd64.deb
+            artifacts/packages/linux-edge-inspection-runtime_${{ env.VERSION }}_arm64.deb
+            artifacts/packages/linux-edge-inspection-capture-request-listener_${{ env.VERSION }}_arm64.deb
+            artifacts/packages/linux-edge-inspection-inspection-worker_${{ env.VERSION }}_arm64.deb
+            artifacts/packages/linux-edge-inspection-management_${{ env.VERSION }}_arm64.deb
+            artifacts/packages/linux-edge-inspection-management-api_${{ env.VERSION }}_arm64.deb
+            artifacts/packages/linux-edge-inspection-image-cleanup_${{ env.VERSION }}_arm64.deb
           generate_release_notes: true
